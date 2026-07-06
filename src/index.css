@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply box-border;
+  }
+
+  html {
+    @apply scroll-smooth;
+  }
+
+  body {
+    @apply font-sans antialiased;
+  }
+}
+
+@layer components {
+  .glass {
+    @apply bg-white/70 backdrop-blur-xl border border-white/20;
+  }
+
+  .glass-dark {
+    @apply bg-black/5 backdrop-blur-xl border border-white/10;
+  }
+
+  .gradient-mint {
+    background: linear-gradient(135deg, #ccfbeb 0%, #99f6d9 25%, #5eead4 50%, #2dd4bf 75%, #14b8a6 100%);
+  }
+
+  .gradient-hero {
+    background: linear-gradient(180deg, #ccfbeb 0%, #99f6d9 30%, #f0fdfa 60%, #ffffff 100%);
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-teal-600 via-mint-500 to-accent-500;
+  }
+
+  .shadow-glow {
+    box-shadow: 0 0 40px rgba(20, 184, 166, 0.15), 0 0 80px rgba(20, 184, 166, 0.1);
+  }
+
+  .shadow-card {
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04), 0 8px 40px rgba(0, 0, 0, 0.06);
+  }
+
+  .shadow-float {
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.08), 0 8px 20px rgba(0, 0, 0, 0.04);
+  }
+}
