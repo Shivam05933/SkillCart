@@ -107,7 +107,7 @@ function Navbar() {
         isScrolled ? 'glass shadow-card' : 'bg-transparent'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+      <div className="px-4 py-3 mx-auto max-w-7xl sm:px-6 sm:py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
           <motion.div
@@ -115,30 +115,30 @@ function Navbar() {
             whileHover={{ scale: 1.02 }}
           >
             <div className="relative">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-teal-500 to-mint-400 flex items-center justify-center shadow-glow">
-                <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-teal-500 to-mint-400 shadow-glow">
+                <Brain className="w-4 h-4 text-white sm:w-5 sm:h-5" />
               </div>
-              <div className="absolute -bottom-1 -right-1 w-3 h-3 sm:w-4 sm:h-4 bg-white rounded-full flex items-center justify-center">
+              <div className="absolute flex items-center justify-center w-3 h-3 bg-white rounded-full -bottom-1 -right-1 sm:w-4 sm:h-4">
                 <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-teal-500" />
               </div>
             </div>
-            <span className="text-lg sm:text-xl font-bold text-gray-900">SkillCart</span>
+            <span className="text-lg font-bold text-gray-900 sm:text-xl">SkillCart</span>
           </motion.div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="items-center hidden gap-1 md:flex">
             {navLinks.map((link) => (
               <motion.a
                 key={link}
                 href={`#${link.toLowerCase()}`}
-                className="relative px-3 lg:px-4 py-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                className="relative px-3 py-2 text-sm font-medium text-gray-600 transition-colors lg:px-4 hover:text-gray-900"
                 onMouseEnter={() => setHoveredLink(link)}
                 onMouseLeave={() => setHoveredLink(null)}
               >
                 {hoveredLink === link && (
                   <motion.div
                     layoutId="navbar-hover"
-                    className="absolute inset-0 bg-teal-50 rounded-lg -z-10"
+                    className="absolute inset-0 rounded-lg bg-teal-50 -z-10"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -158,9 +158,9 @@ function Navbar() {
           </div>
 
           {/* CTA Buttons */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-3">
+          <div className="items-center hidden gap-2 md:flex lg:gap-3">
             <motion.button
-              className="px-3 lg:px-4 py-2 text-sm font-medium text-gray-700 hover:text-gray-900 transition-colors"
+              className="px-3 py-2 text-sm font-medium text-gray-700 transition-colors lg:px-4 hover:text-gray-900"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -177,7 +177,7 @@ function Navbar() {
 
           {/* Mobile Menu Button */}
           <motion.button
-            className="md:hidden p-2 text-gray-700"
+            className="p-2 text-gray-700 md:hidden"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             whileTap={{ scale: 0.9 }}
           >
@@ -192,21 +192,21 @@ function Navbar() {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="md:hidden overflow-hidden"
+              className="overflow-hidden md:hidden"
             >
               <div className="py-4 space-y-2">
                 {navLinks.map((link) => (
                   <motion.a
                     key={link}
                     href={`#${link.toLowerCase()}`}
-                    className="block px-4 py-3 text-gray-600 hover:text-gray-900 hover:bg-teal-50 rounded-xl transition-colors"
+                    className="block px-4 py-3 text-gray-600 transition-colors hover:text-gray-900 hover:bg-teal-50 rounded-xl"
                     whileTap={{ scale: 0.98 }}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     {link}
                   </motion.a>
                 ))}
-                <div className="pt-2 space-y-2 px-4">
+                <div className="px-4 pt-2 space-y-2">
                   <button className="w-full px-4 py-2.5 text-gray-700 font-medium border border-gray-200 rounded-xl">
                     Login
                   </button>
@@ -230,7 +230,7 @@ function FloatingSkillCard({ skill, delay, style }) {
 
   return (
     <motion.div
-      className="absolute glass rounded-xl px-3 py-2 shadow-card cursor-pointer"
+      className="absolute px-3 py-2 cursor-pointer glass rounded-xl shadow-card"
       style={{
         ...style,
         x: parallax.x,
@@ -276,31 +276,31 @@ function ProfileCard() {
 
   return (
     <motion.div
-      className="relative glass rounded-3xl p-5 sm:p-6 shadow-float w-48 sm:w-52"
+      className="relative w-48 p-5 glass rounded-3xl sm:p-6 shadow-float sm:w-52"
       initial={{ opacity: 0, y: 40 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.5, duration: 0.8, type: 'spring' }}
     >
       {/* Avatar */}
-      <div className="flex items-center gap-3 sm:gap-4 mb-4">
+      <div className="flex items-center gap-3 mb-4 sm:gap-4">
         <motion.div
-          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-gradient-to-br from-teal-400 to-mint-300 flex items-center justify-center"
+          className="flex items-center justify-center w-12 h-12 rounded-full sm:w-14 sm:h-14 bg-gradient-to-br from-teal-400 to-mint-300"
           animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         >
           <span className="text-xl sm:text-2xl">👤</span>
         </motion.div>
         <div>
-          <h4 className="font-semibold text-gray-900 text-sm sm:text-base">Alex Johnson</h4>
-          <p className="text-xs sm:text-sm text-gray-500">Full Stack Developer</p>
+          <h4 className="text-sm font-semibold text-gray-900 sm:text-base">Alex Johnson</h4>
+          <p className="text-xs text-gray-500 sm:text-sm">Full Stack Developer</p>
         </div>
       </div>
 
       {/* Jobs Found */}
-      <div className="bg-gradient-to-br from-teal-500 to-mint-400 rounded-2xl p-4 text-white">
-        <p className="text-xs font-medium opacity-80 mb-1">Jobs Found</p>
+      <div className="p-4 text-white bg-gradient-to-br from-teal-500 to-mint-400 rounded-2xl">
+        <p className="mb-1 text-xs font-medium opacity-80">Jobs Found</p>
         <div className="flex items-end gap-2">
-          <span ref={ref} className="text-3xl sm:text-4xl font-bold">{count}</span>
+          <span ref={ref} className="text-3xl font-bold sm:text-4xl">{count}</span>
           <span className="text-xl sm:text-2xl">+</span>
         </div>
         <div className="flex gap-1 mt-3">
@@ -317,9 +317,9 @@ function ProfileCard() {
 
       {/* Pulse dot */}
       <div className="absolute top-3 right-3">
-        <span className="relative flex h-3 w-3">
-          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-teal-400 opacity-75" />
-          <span className="relative inline-flex rounded-full h-3 w-3 bg-teal-500" />
+        <span className="relative flex w-3 h-3">
+          <span className="absolute inline-flex w-full h-full bg-teal-400 rounded-full opacity-75 animate-ping" />
+          <span className="relative inline-flex w-3 h-3 bg-teal-500 rounded-full" />
         </span>
       </div>
     </motion.div>
@@ -347,11 +347,11 @@ function HeroSection() {
   const headline = "Upload Your Resume Once. Let AI Find Your Dream Job.";
 
   return (
-    <section className="relative min-h-screen gradient-hero overflow-hidden pt-16 sm:pt-20">
+    <section className="relative min-h-screen pt-16 overflow-hidden gradient-hero sm:pt-20">
       {/* Background Elements */}
       <div className="absolute inset-0 overflow-hidden">
         <motion.div
-          className="absolute -top-40 -right-40 w-72 sm:w-96 h-72 sm:h-96 rounded-full bg-gradient-to-br from-teal-200/40 to-mint-200/40 blur-3xl"
+          className="absolute rounded-full -top-40 -right-40 w-72 sm:w-96 h-72 sm:h-96 bg-gradient-to-br from-teal-200/40 to-mint-200/40 blur-3xl"
           animate={{
             scale: [1, 1.2, 1],
             opacity: [0.3, 0.5, 0.3],
@@ -359,7 +359,7 @@ function HeroSection() {
           transition={{ duration: 8, repeat: Infinity }}
         />
         <motion.div
-          className="absolute top-1/2 -left-40 w-60 sm:w-80 h-60 sm:h-80 rounded-full bg-gradient-to-br from-accent-200/30 to-teal-200/30 blur-3xl"
+          className="absolute rounded-full top-1/2 -left-40 w-60 sm:w-80 h-60 sm:h-80 bg-gradient-to-br from-accent-200/30 to-teal-200/30 blur-3xl"
           animate={{
             scale: [1, 1.3, 1],
             opacity: [0.2, 0.4, 0.2],
@@ -368,22 +368,22 @@ function HeroSection() {
         />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 py-12 sm:py-20 lg:py-32">
-        <div className="grid lg:grid-cols-2 gap-8 lg:gap-20 items-center">
+      <div className="relative px-4 py-12 mx-auto max-w-7xl sm:px-6 sm:py-20 lg:py-32">
+        <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-20">
           {/* Left Content */}
-          <div className="space-y-6 sm:space-y-8 text-center lg:text-left">
+          <div className="space-y-6 text-center sm:space-y-8 lg:text-left">
             {/* Badge */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              className="inline-flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-white/80 shadow-card border border-teal-100 mx-auto lg:mx-0"
+              className="inline-flex items-center gap-2 px-3 py-2 mx-auto border border-teal-100 rounded-full sm:px-4 bg-white/80 shadow-card lg:mx-0"
             >
               <Sparkles className="w-4 h-4 text-teal-500" />
               <span className="text-sm font-medium text-gray-700">AI-Powered Job Matching</span>
             </motion.div>
 
             {/* Headline */}
-            <h1 className="text-3xl sm:text-4xl lg:text-5xl xl:text-6xl font-bold text-gray-900 leading-tight">
+            <h1 className="text-3xl font-bold leading-tight text-gray-900 sm:text-4xl lg:text-5xl xl:text-6xl">
               {headline.split(' ').map((word, i) => (
                 <motion.span
                   key={i}
@@ -406,7 +406,7 @@ function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4, duration: 0.6 }}
-              className="text-base sm:text-lg text-gray-600 leading-relaxed max-w-xl mx-auto lg:mx-0"
+              className="max-w-xl mx-auto text-base leading-relaxed text-gray-600 sm:text-lg lg:mx-0"
             >
               Our MERN-driven smart optimization ecosystem analyzes your skills, optimizes your resume for each role,
               and automatically applies to matched positions. Land your dream job faster.
@@ -417,14 +417,14 @@ function HeroSection() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.6, duration: 0.6 }}
-              className="flex flex-wrap gap-3 sm:gap-4 justify-center lg:justify-start"
+              className="flex flex-wrap justify-center gap-3 sm:gap-4 lg:justify-start"
             >
               <motion.button
-                className="group relative px-6 sm:px-8 py-3 sm:py-4 bg-gray-900 text-white rounded-xl sm:rounded-2xl font-semibold shadow-xl overflow-hidden"
+                className="relative px-6 py-3 overflow-hidden font-semibold text-white bg-gray-900 shadow-xl group sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl"
                 whileHover={{ scale: 1.02, y: -2 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span className="relative z-10 flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
+                <span className="relative z-10 flex items-center gap-2 text-sm sm:gap-3 sm:text-base">
                   <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                   Upload Resume
                 </span>
@@ -437,11 +437,11 @@ function HeroSection() {
               </motion.button>
 
               <motion.button
-                className="relative px-6 sm:px-8 py-3 sm:py-4 border-2 border-gray-200 text-gray-700 rounded-xl sm:rounded-2xl font-semibold hover:border-teal-300 transition-colors overflow-hidden"
+                className="relative px-6 py-3 overflow-hidden font-semibold text-gray-700 transition-colors border-2 border-gray-200 sm:px-8 sm:py-4 rounded-xl sm:rounded-2xl hover:border-teal-300"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <span className="relative z-10 flex items-center gap-2 sm:gap-3 text-sm sm:text-base">
+                <span className="relative z-10 flex items-center gap-2 text-sm sm:gap-3 sm:text-base">
                   <Play className="w-4 h-4 sm:w-5 sm:h-5" />
                   Watch Demo
                 </span>
@@ -458,20 +458,20 @@ function HeroSection() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.8 }}
-              className="flex items-center gap-4 sm:gap-6 pt-4 justify-center lg:justify-start"
+              className="flex items-center justify-center gap-4 pt-4 sm:gap-6 lg:justify-start"
             >
               <div className="flex -space-x-2 sm:-space-x-3">
                 {[...Array(4)].map((_, i) => (
                   <div
                     key={i}
-                    className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 border-2 border-white flex items-center justify-center text-sm"
+                    className="flex items-center justify-center w-8 h-8 text-sm border-2 border-white rounded-full sm:w-10 sm:h-10 bg-gradient-to-br from-gray-200 to-gray-300"
                   >
                     {['👨', '👩', '🧑', '👨'][i]}
                   </div>
                 ))}
               </div>
               <div className="text-left">
-                <p className="text-xs sm:text-sm font-semibold text-gray-900">10,000+ Professionals</p>
+                <p className="text-xs font-semibold text-gray-900 sm:text-sm">10,000+ Professionals</p>
                 <p className="text-xs text-gray-500">Trust SkillCart for their career</p>
               </div>
             </motion.div>
@@ -482,7 +482,7 @@ function HeroSection() {
             <div className="relative w-full h-full">
               {/* Central Profile Card */}
               <motion.div
-                className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10"
+                className="absolute z-10 -translate-x-1/2 -translate-y-1/2 top-1/2 left-1/2"
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3, type: 'spring' }}
@@ -572,7 +572,7 @@ function ATSScoreProgress({ score }) {
         </defs>
       </svg>
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-xl sm:text-2xl font-bold text-gray-900">{displayScore}%</span>
+        <span className="text-xl font-bold text-gray-900 sm:text-2xl">{displayScore}%</span>
       </div>
     </div>
   );
@@ -614,25 +614,25 @@ function FeatureCard({ feature, index }) {
       className={`${gridClass[feature.variant]} bg-white rounded-2xl sm:rounded-3xl p-5 sm:p-6 lg:p-8 shadow-card border border-gray-100 group cursor-pointer relative overflow-hidden`}
     >
       {/* Gradient overlay on hover */}
-      <div className="absolute inset-0 bg-gradient-to-br from-teal-50/0 to-mint-50/0 group-hover:from-teal-50/50 group-hover:to-mint-50/30 transition-all duration-500" />
+      <div className="absolute inset-0 transition-all duration-500 bg-gradient-to-br from-teal-50/0 to-mint-50/0 group-hover:from-teal-50/50 group-hover:to-mint-50/30" />
 
       <div className="relative">
-        <div className="flex items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
-          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500 to-mint-400 flex items-center justify-center text-white shadow-lg shadow-teal-500/25 group-hover:scale-110 transition-transform duration-300">
+        <div className="flex items-start gap-3 mb-3 sm:gap-4 sm:mb-4">
+          <div className="flex items-center justify-center w-10 h-10 text-white transition-transform duration-300 shadow-lg sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500 to-mint-400 shadow-teal-500/25 group-hover:scale-110">
             {feature.icon}
           </div>
           {feature.variant === 'small' && (
             <div className="flex-1">
-              <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-1">{feature.title}</h3>
-              <p className="text-xs sm:text-sm text-gray-500">{feature.description}</p>
+              <h3 className="mb-1 text-base font-semibold text-gray-900 sm:text-lg">{feature.title}</h3>
+              <p className="text-xs text-gray-500 sm:text-sm">{feature.description}</p>
             </div>
           )}
         </div>
 
         {feature.variant !== 'small' && (
           <>
-            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
-            <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">{feature.description}</p>
+            <h3 className="mb-2 text-lg font-semibold text-gray-900 sm:text-xl">{feature.title}</h3>
+            <p className="mb-4 text-sm text-gray-600 sm:text-base sm:mb-6">{feature.description}</p>
           </>
         )}
 
@@ -657,33 +657,33 @@ function ResumeFlexDemo() {
       >
         {/* Front */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-200 cursor-pointer"
+          className="absolute inset-0 p-3 border border-gray-200 cursor-pointer bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl sm:rounded-2xl sm:p-4"
           style={{ backfaceVisibility: 'hidden' }}
         >
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-teal-100 flex items-center justify-center">
-              <FileSearch className="w-3 h-3 sm:w-4 sm:h-4 text-teal-600" />
+            <div className="flex items-center justify-center bg-teal-100 rounded-lg w-7 h-7 sm:w-8 sm:h-8">
+              <FileSearch className="w-3 h-3 text-teal-600 sm:w-4 sm:h-4" />
             </div>
-            <span className="text-xs sm:text-sm font-medium text-gray-700">Original Resume</span>
+            <span className="text-xs font-medium text-gray-700 sm:text-sm">Original Resume</span>
           </div>
           <div className="space-y-2">
             {[...Array(4)].map((_, i) => (
               <div key={i} className="h-2 bg-gray-200 rounded-full" style={{ width: `${80 - i * 15}%` }} />
             ))}
           </div>
-          <p className="text-xs text-gray-400 mt-3 sm:mt-4">Click to see optimized version</p>
+          <p className="mt-3 text-xs text-gray-400 sm:mt-4">Click to see optimized version</p>
         </div>
 
         {/* Back */}
         <div
-          className="absolute inset-0 bg-gradient-to-br from-teal-50 to-mint-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-teal-200 cursor-pointer"
+          className="absolute inset-0 p-3 border border-teal-200 cursor-pointer bg-gradient-to-br from-teal-50 to-mint-50 rounded-xl sm:rounded-2xl sm:p-4"
           style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
         >
           <div className="flex items-center gap-2 mb-2 sm:mb-3">
-            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-teal-500 flex items-center justify-center">
-              <Target className="w-3 h-3 sm:w-4 sm:h-4 text-white" />
+            <div className="flex items-center justify-center bg-teal-500 rounded-lg w-7 h-7 sm:w-8 sm:h-8">
+              <Target className="w-3 h-3 text-white sm:w-4 sm:h-4" />
             </div>
-            <span className="text-xs sm:text-sm font-medium text-teal-700">Role-Specific</span>
+            <span className="text-xs font-medium text-teal-700 sm:text-sm">Role-Specific</span>
           </div>
           <div className="space-y-2">
             {[...Array(4)].map((_, i) => (
@@ -696,7 +696,7 @@ function ResumeFlexDemo() {
               />
             ))}
           </div>
-          <p className="text-xs text-teal-600 mt-3 sm:mt-4">Click to flip back</p>
+          <p className="mt-3 text-xs text-teal-600 sm:mt-4">Click to flip back</p>
         </div>
       </motion.div>
     </div>
@@ -726,9 +726,9 @@ function SkillGapTimeline() {
   return (
     <div ref={ref} className="relative mt-4">
       {/* Progress Line */}
-      <div className="absolute top-4 left-4 right-4 h-1 bg-gray-100 rounded-full">
+      <div className="absolute h-1 bg-gray-100 rounded-full top-4 left-4 right-4">
         <motion.div
-          className="h-full bg-gradient-to-r from-teal-500 to-mint-400 rounded-full"
+          className="h-full rounded-full bg-gradient-to-r from-teal-500 to-mint-400"
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
           transition={{ duration: 1.5, ease: 'easeOut' }}
@@ -736,7 +736,7 @@ function SkillGapTimeline() {
       </div>
 
       {/* Week nodes */}
-      <div className="flex justify-between relative pt-2">
+      <div className="relative flex justify-between pt-2">
         {weeks.map((item, i) => (
           <motion.div
             key={item.week}
@@ -746,12 +746,12 @@ function SkillGapTimeline() {
             transition={{ delay: 0.2 + i * 0.15 }}
           >
             <div
-              className="w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-white border-2 flex items-center justify-center text-xs font-bold text-gray-600 mb-2"
+              className="flex items-center justify-center mb-2 text-xs font-bold text-gray-600 bg-white border-2 rounded-full w-7 h-7 sm:w-8 sm:h-8"
               style={{ borderColor: progress > i * 25 ? item.color : '#e5e7eb' }}
             >
               {item.week}
             </div>
-            <span className="text-xs text-gray-600 hidden sm:block">{item.skill}</span>
+            <span className="hidden text-xs text-gray-600 sm:block">{item.skill}</span>
           </motion.div>
         ))}
       </div>
@@ -776,13 +776,13 @@ function JobMatchList() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.3 + i * 0.1 }}
           whileHover={{ x: 4, boxShadow: '0 4px 20px rgba(20, 184, 166, 0.15)' }}
-          className="flex items-center gap-2 sm:gap-3 p-2 sm:p-3 rounded-xl bg-gray-50 hover:bg-teal-50 transition-colors cursor-pointer group"
+          className="flex items-center gap-2 p-2 transition-colors cursor-pointer sm:gap-3 sm:p-3 rounded-xl bg-gray-50 hover:bg-teal-50 group"
         >
-          <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-white border border-gray-200 flex items-center justify-center text-base sm:text-lg">
+          <div className="flex items-center justify-center w-8 h-8 text-base bg-white border border-gray-200 rounded-lg sm:w-10 sm:h-10 sm:text-lg">
             {['🔵', '🟣', '🔷'][i]}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs sm:text-sm font-medium text-gray-900 truncate">{job.title}</p>
+            <p className="text-xs font-medium text-gray-900 truncate sm:text-sm">{job.title}</p>
             <p className="text-xs text-gray-500">{job.company}</p>
           </div>
           <div className="flex items-center gap-1">
@@ -797,10 +797,10 @@ function JobMatchList() {
 // Career Insight Box
 function CareerInsightBox() {
   return (
-    <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl sm:rounded-2xl p-3 sm:p-4 text-white">
+    <div className="p-3 text-white bg-gradient-to-br from-gray-900 to-gray-800 rounded-xl sm:rounded-2xl sm:p-4">
       <div className="flex items-center gap-2 mb-2 sm:mb-3">
-        <Bot className="w-4 h-4 sm:w-5 sm:h-5 text-teal-400" />
-        <span className="text-xs sm:text-sm font-medium text-gray-300">AI Career Copilot</span>
+        <Bot className="w-4 h-4 text-teal-400 sm:w-5 sm:h-5" />
+        <span className="text-xs font-medium text-gray-300 sm:text-sm">AI Career Copilot</span>
       </div>
       <div className="space-y-2 sm:space-y-3">
         <div className="flex items-center justify-between">
@@ -814,14 +814,14 @@ function CareerInsightBox() {
                 transition={{ delay: 0.5, duration: 1 }}
               />
             </div>
-            <span className="text-xs sm:text-sm font-semibold">85%</span>
+            <span className="text-xs font-semibold sm:text-sm">85%</span>
           </div>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-gray-400">Expected Salary</span>
-          <span className="text-xs sm:text-sm font-semibold">
+          <span className="text-xs font-semibold sm:text-sm">
             $145K
-            <span className="text-teal-400 ml-1">+18%</span>
+            <span className="ml-1 text-teal-400">+18%</span>
           </span>
         </div>
       </div>
@@ -876,16 +876,16 @@ function FeaturesSection() {
 
   return (
     <section id="features" className="py-16 sm:py-20 lg:py-32 bg-gradient-to-b from-white to-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6">
         {/* Section Header */}
-        <AnimatedSection className="text-center mb-12 sm:mb-16">
+        <AnimatedSection className="mb-12 text-center sm:mb-16">
           <span className="inline-block px-3 sm:px-4 py-1.5 rounded-full bg-teal-100 text-teal-700 text-xs sm:text-sm font-medium mb-4">
             Features
           </span>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4">
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 sm:text-3xl lg:text-4xl xl:text-5xl">
             Everything You Need to Land Your Dream Job
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="max-w-2xl mx-auto text-base text-gray-600 sm:text-lg">
             Our AI-powered platform handles everything from resume optimization to automated applications.
           </p>
         </AnimatedSection>
@@ -915,17 +915,17 @@ function HowItWorksSection() {
   ];
 
   return (
-    <section id="about" className="py-16 sm:py-20 lg:py-32 bg-white overflow-hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+    <section id="about" className="py-16 overflow-hidden bg-white sm:py-20 lg:py-32">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6">
         {/* Section Header */}
-        <AnimatedSection className="text-center mb-12 sm:mb-16">
+        <AnimatedSection className="mb-12 text-center sm:mb-16">
           <span className="inline-block px-3 sm:px-4 py-1.5 rounded-full bg-teal-100 text-teal-700 text-xs sm:text-sm font-medium mb-4">
             How It Works
           </span>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4">
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 sm:text-3xl lg:text-4xl xl:text-5xl">
             Your Journey to the Perfect Job
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="max-w-2xl mx-auto text-base text-gray-600 sm:text-lg">
             Five simple steps powered by AI to transform your job search
           </p>
         </AnimatedSection>
@@ -933,7 +933,7 @@ function HowItWorksSection() {
         {/* Pipeline */}
         <div ref={ref} className="relative">
           {/* Connection Line - Hidden on mobile */}
-          <svg className="hidden lg:block absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1000 200">
+          <svg className="absolute inset-0 hidden w-full h-full pointer-events-none lg:block" viewBox="0 0 1000 200">
             <motion.path
               d="M100,100 Q250,50 400,100 T700,100 T950,100"
               fill="none"
@@ -953,7 +953,7 @@ function HowItWorksSection() {
           </svg>
 
           {/* Steps */}
-          <div className="relative grid grid-cols-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center gap-4 sm:gap-6 lg:gap-8 px-2 sm:px-4">
+          <div className="relative grid grid-cols-2 gap-4 px-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-center sm:gap-6 lg:gap-8 sm:px-4">
             {steps.map((step, i) => (
               <motion.div
                 key={step.num}
@@ -963,7 +963,7 @@ function HowItWorksSection() {
                 transition={{ delay: 0.2 + i * 0.15, duration: 0.6 }}
               >
                 <motion.div
-                  className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500 to-mint-400 flex items-center justify-center text-white shadow-lg shadow-teal-500/25 mb-3 sm:mb-4"
+                  className="flex items-center justify-center w-12 h-12 mb-3 text-white shadow-lg sm:w-14 sm:h-14 lg:w-16 lg:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-500 to-mint-400 shadow-teal-500/25 sm:mb-4"
                   whileHover={{ scale: 1.1, rotate: 5 }}
                 >
                   {step.icon}
@@ -972,8 +972,8 @@ function HowItWorksSection() {
                   <span className="inline-block px-2 py-0.5 bg-teal-100 text-teal-700 text-xs font-semibold rounded-full mb-1">
                     Step {step.num}
                   </span>
-                  <h4 className="font-semibold text-gray-900 text-xs sm:text-sm mb-1">{step.title}</h4>
-                  <p className="text-xs text-gray-500 hidden sm:block">{step.description}</p>
+                  <h4 className="mb-1 text-xs font-semibold text-gray-900 sm:text-sm">{step.title}</h4>
+                  <p className="hidden text-xs text-gray-500 sm:block">{step.description}</p>
                 </div>
               </motion.div>
             ))}
@@ -1017,22 +1017,22 @@ function TestimonialsSection() {
 
   return (
     <section className="py-16 sm:py-20 lg:py-32 bg-gradient-to-b from-gray-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6">
         {/* Section Header */}
-        <AnimatedSection className="text-center mb-12 sm:mb-16">
+        <AnimatedSection className="mb-12 text-center sm:mb-16">
           <span className="inline-block px-3 sm:px-4 py-1.5 rounded-full bg-teal-100 text-teal-700 text-xs sm:text-sm font-medium mb-4">
             Testimonials
           </span>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl xl:text-5xl font-bold text-gray-900 mb-4">
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 sm:text-3xl lg:text-4xl xl:text-5xl">
             Loved by Thousands of Professionals
           </h2>
-          <p className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto">
+          <p className="max-w-2xl mx-auto text-base text-gray-600 sm:text-lg">
             See how SkillCart has helped others land their dream jobs
           </p>
         </AnimatedSection>
 
         {/* Testimonials Slider */}
-        <div className="relative max-w-3xl sm:max-w-4xl mx-auto">
+        <div className="relative max-w-3xl mx-auto sm:max-w-4xl">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -1040,24 +1040,24 @@ function TestimonialsSection() {
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -50 }}
               transition={{ duration: 0.4 }}
-              className="bg-white rounded-2xl sm:rounded-3xl p-6 sm:p-8 lg:p-12 shadow-card border border-gray-100"
+              className="p-6 bg-white border border-gray-100 rounded-2xl sm:rounded-3xl sm:p-8 lg:p-12 shadow-card"
             >
-              <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-100 to-mint-100 flex items-center justify-center text-2xl sm:text-3xl flex-shrink-0 mx-auto sm:mx-0">
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:gap-6">
+                <div className="flex items-center justify-center flex-shrink-0 mx-auto text-2xl w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-teal-100 to-mint-100 sm:text-3xl sm:mx-0">
                   {testimonials[currentIndex].avatar}
                 </div>
                 <div className="flex-1 text-center sm:text-left">
-                  <div className="flex items-center gap-1 mb-3 justify-center sm:justify-start">
+                  <div className="flex items-center justify-center gap-1 mb-3 sm:justify-start">
                     {[...Array(testimonials[currentIndex].rating)].map((_, i) => (
-                      <Star key={i} className="w-4 h-4 sm:w-5 sm:h-5 fill-teal-400 text-teal-400" />
+                      <Star key={i} className="w-4 h-4 text-teal-400 sm:w-5 sm:h-5 fill-teal-400" />
                     ))}
                   </div>
-                  <p className="text-base sm:text-lg text-gray-700 mb-6 leading-relaxed">
+                  <p className="mb-6 text-base leading-relaxed text-gray-700 sm:text-lg">
                     "{testimonials[currentIndex].text}"
                   </p>
                   <div>
                     <p className="font-semibold text-gray-900">{testimonials[currentIndex].name}</p>
-                    <p className="text-xs sm:text-sm text-gray-500">{testimonials[currentIndex].role}</p>
+                    <p className="text-xs text-gray-500 sm:text-sm">{testimonials[currentIndex].role}</p>
                   </div>
                 </div>
               </div>
@@ -1068,7 +1068,7 @@ function TestimonialsSection() {
           <div className="flex items-center justify-center gap-4 mt-6 sm:mt-8">
             <motion.button
               onClick={prevSlide}
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:border-teal-300 hover:text-teal-600 transition-colors"
+              className="flex items-center justify-center w-10 h-10 text-gray-600 transition-colors bg-white border border-gray-200 sm:w-12 sm:h-12 rounded-xl hover:border-teal-300 hover:text-teal-600"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -1091,7 +1091,7 @@ function TestimonialsSection() {
 
             <motion.button
               onClick={nextSlide}
-              className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-white border border-gray-200 flex items-center justify-center text-gray-600 hover:border-teal-300 hover:text-teal-600 transition-colors"
+              className="flex items-center justify-center w-10 h-10 text-gray-600 transition-colors bg-white border border-gray-200 sm:w-12 sm:h-12 rounded-xl hover:border-teal-300 hover:text-teal-600"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
             >
@@ -1108,21 +1108,21 @@ function TestimonialsSection() {
 function FAQItem({ question, answer, isOpen, onClick }) {
   return (
     <motion.div
-      className="border border-gray-100 rounded-xl sm:rounded-2xl overflow-hidden bg-white"
+      className="overflow-hidden bg-white border border-gray-100 rounded-xl sm:rounded-2xl"
       initial={false}
     >
       <motion.button
         onClick={onClick}
-        className="w-full flex items-center justify-between p-4 sm:p-6 text-left"
+        className="flex items-center justify-between w-full p-4 text-left sm:p-6"
         whileHover={{ backgroundColor: 'rgba(20, 184, 166, 0.05)' }}
       >
-        <span className="font-semibold text-gray-900 text-sm sm:text-base pr-4">{question}</span>
+        <span className="pr-4 text-sm font-semibold text-gray-900 sm:text-base">{question}</span>
         <motion.div
           animate={{ rotate: isOpen ? 180 : 0 }}
           transition={{ duration: 0.3 }}
           className="flex-shrink-0"
         >
-          <ChevronDown className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
+          <ChevronDown className="w-4 h-4 text-gray-400 sm:w-5 sm:h-5" />
         </motion.div>
       </motion.button>
 
@@ -1134,7 +1134,7 @@ function FAQItem({ question, answer, isOpen, onClick }) {
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease: 'easeInOut' }}
           >
-            <div className="px-4 sm:px-6 pb-4 sm:pb-6 text-gray-600 text-sm sm:text-base">
+            <div className="px-4 pb-4 text-sm text-gray-600 sm:px-6 sm:pb-6 sm:text-base">
               {answer}
             </div>
           </motion.div>
@@ -1167,17 +1167,17 @@ function FAQSection() {
   ];
 
   return (
-    <section className="py-16 sm:py-20 lg:py-32 bg-white">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6">
+    <section className="py-16 bg-white sm:py-20 lg:py-32">
+      <div className="max-w-3xl px-4 mx-auto sm:px-6">
         {/* Section Header */}
-        <AnimatedSection className="text-center mb-10 sm:mb-12">
+        <AnimatedSection className="mb-10 text-center sm:mb-12">
           <span className="inline-block px-3 sm:px-4 py-1.5 rounded-full bg-teal-100 text-teal-700 text-xs sm:text-sm font-medium mb-4">
             FAQ
           </span>
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">
+          <h2 className="mb-4 text-2xl font-bold text-gray-900 sm:text-3xl lg:text-4xl">
             Frequently Asked Questions
           </h2>
-          <p className="text-base sm:text-lg text-gray-600">
+          <p className="text-base text-gray-600 sm:text-lg">
             Everything you need to know about SkillCart
           </p>
         </AnimatedSection>
@@ -1202,18 +1202,18 @@ function FAQSection() {
 // Footer
 function Footer() {
   return (
-    <footer className="bg-gray-900 text-white py-12 sm:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-12 mb-12">
+    <footer className="py-12 text-white bg-gray-900 sm:py-16">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6">
+        <div className="grid grid-cols-2 gap-6 mb-12 md:grid-cols-4 sm:gap-12">
           {/* Brand */}
           <div className="col-span-2 md:col-span-2">
             <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-teal-500 to-mint-400 flex items-center justify-center">
-                <Brain className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+              <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-teal-500 to-mint-400">
+                <Brain className="w-4 h-4 text-white sm:w-5 sm:h-5" />
               </div>
-              <span className="text-lg sm:text-xl font-bold">SkillCart</span>
+              <span className="text-lg font-bold sm:text-xl">SkillCart</span>
             </div>
-            <p className="text-gray-400 mb-6 max-w-sm text-sm sm:text-base">
+            <p className="max-w-sm mb-6 text-sm text-gray-400 sm:text-base">
               AI-powered job searching that helps you land your dream role faster.
             </p>
             <div className="flex gap-3 sm:gap-4">
@@ -1221,7 +1221,7 @@ function Footer() {
                 <motion.a
                   key={social}
                   href="#"
-                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gray-800 flex items-center justify-center hover:bg-teal-600 transition-colors"
+                  className="flex items-center justify-center w-8 h-8 transition-colors bg-gray-800 sm:w-10 sm:h-10 rounded-xl hover:bg-teal-600"
                   whileHover={{ y: -2 }}
                 />
               ))}
@@ -1230,11 +1230,11 @@ function Footer() {
 
           {/* Links */}
           <div>
-            <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Product</h4>
+            <h4 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">Product</h4>
             <ul className="space-y-2 sm:space-y-3">
               {['Features', 'Pricing', 'Enterprise', 'API'].map((link) => (
                 <li key={link}>
-                  <a href="#" className="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
+                  <a href="#" className="text-xs text-gray-400 transition-colors hover:text-white sm:text-sm">
                     {link}
                   </a>
                 </li>
@@ -1243,11 +1243,11 @@ function Footer() {
           </div>
 
           <div>
-            <h4 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">Company</h4>
+            <h4 className="mb-3 text-sm font-semibold sm:mb-4 sm:text-base">Company</h4>
             <ul className="space-y-2 sm:space-y-3">
               {['About', 'Blog', 'Careers', 'Contact'].map((link) => (
                 <li key={link}>
-                  <a href="#" className="text-gray-400 hover:text-white transition-colors text-xs sm:text-sm">
+                  <a href="#" className="text-xs text-gray-400 transition-colors hover:text-white sm:text-sm">
                     {link}
                   </a>
                 </li>
@@ -1256,13 +1256,13 @@ function Footer() {
           </div>
         </div>
 
-        <div className="pt-8 border-t border-gray-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-gray-500 text-xs sm:text-sm">
+        <div className="flex flex-col items-center justify-between gap-4 pt-8 border-t border-gray-800 sm:flex-row">
+          <p className="text-xs text-gray-500 sm:text-sm">
             &copy; 2026 SkillCart. All rights reserved.
           </p>
           <div className="flex gap-4 sm:gap-6">
             {['Privacy', 'Terms', 'Cookies'].map((link) => (
-              <a key={link} href="#" className="text-gray-400 hover:text-white text-xs sm:text-sm transition-colors">
+              <a key={link} href="#" className="text-xs text-gray-400 transition-colors hover:text-white sm:text-sm">
                 {link}
               </a>
             ))}
@@ -1284,8 +1284,8 @@ function StatsBar() {
 
   return (
     <section className="py-8 sm:py-12 bg-gradient-to-r from-teal-600 to-mint-500">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8">
+      <div className="px-4 mx-auto max-w-7xl sm:px-6">
+        <div className="grid grid-cols-2 gap-6 md:grid-cols-4 sm:gap-8">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -1295,7 +1295,7 @@ function StatsBar() {
               transition={{ delay: i * 0.1 }}
               className="text-center text-white"
             >
-              <p className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-1">{stat.value}</p>
+              <p className="mb-1 text-2xl font-bold sm:text-3xl lg:text-4xl">{stat.value}</p>
               <p className="text-xs sm:text-sm opacity-80">{stat.label}</p>
             </motion.div>
           ))}
