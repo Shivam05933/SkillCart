@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { FaTwitter, FaLinkedin } from "react-icons/fa";
+
 import {
   ArrowRight,
   BarChart3,
@@ -10,18 +12,18 @@ import {
   FileCheck2,
   FileUp,
   Gauge,
-  Linkedin,
   Menu,
   MessageSquareText,
   Play,
   Search,
   Sparkles,
   Target,
-  Twitter,
   Upload,
   X,
   Zap,
 } from 'lucide-react'
+
+
 
 const fadeUp = {
   hidden: { opacity: 0, y: 24 },
@@ -116,7 +118,7 @@ function App() {
       <section id="start" className="cta-section"><div className="cta-pattern" /><div className="container cta-inner"><div className="eyebrow light"><span />YOUR NEXT CHAPTER STARTS HERE</div><h2>Ready to make your<br /><em>move?</em></h2><p>Build the career you keep thinking about. Your first step is free.</p><Button href="#top" variant="light" icon={ArrowRight}>Get started free</Button><div className="cta-note"><Check size={14} /> No credit card required <span /> <Check size={14} /> Free forever plan</div></div></section>
     </main>
 
-    <footer id="contact" className="footer"><div className="container footer-top"><div className="footer-brand"><Logo /><p>The AI career copilot for people<br />who are going places.</p></div><div className="footer-col"><strong>Product</strong><a href="#features">Features</a><a href="#showcase">How it works</a><a href="#pricing">Pricing</a><a href="#start">Changelog</a></div><div className="footer-col"><strong>Company</strong><a href="#contact">About us</a><a href="#contact">Careers <small>We’re hiring</small></a><a href="#contact">Contact</a><a href="#contact">Blog</a></div><div className="footer-col"><strong>Resources</strong><a href="#contact">Help center</a><a href="#contact">Career guides</a><a href="#contact">Community</a><a href="#contact">Privacy</a></div><div className="footer-newsletter"><strong>Get the good stuff.</strong><p>A thoughtful note on work, once a month.</p><div className="email-box"><input type="email" placeholder="Your email address" aria-label="Email address" /><button aria-label="Subscribe"><ArrowRight size={16} /></button></div></div></div><div className="container footer-bottom"><span>© 2024 SkillCart, Inc. Made for the next move.</span><div className="socials"><a href="#contact" aria-label="Twitter"><Twitter size={16} /></a><a href="#contact" aria-label="LinkedIn"><Linkedin size={16} /></a><a href="#contact" aria-label="Search"><Search size={16} /></a></div><span>Made with intention <span className="heart">♥</span></span></div></footer>
+    <footer id="contact" className="footer"><div className="container footer-top"><div className="footer-brand"><Logo /><p>The AI career copilot for people<br />who are going places.</p></div><div className="footer-col"><strong>Product</strong><a href="#features">Features</a><a href="#showcase">How it works</a><a href="#pricing">Pricing</a><a href="#start">Changelog</a></div><div className="footer-col"><strong>Company</strong><a href="#contact">About us</a><a href="#contact">Careers <small>We’re hiring</small></a><a href="#contact">Contact</a><a href="#contact">Blog</a></div><div className="footer-col"><strong>Resources</strong><a href="#contact">Help center</a><a href="#contact">Career guides</a><a href="#contact">Community</a><a href="#contact">Privacy</a></div><div className="footer-newsletter"><strong>Get the good stuff.</strong><p>A thoughtful note on work, once a month.</p><div className="email-box"><input type="email" placeholder="Your email address" aria-label="Email address" /><button aria-label="Subscribe"><ArrowRight size={16} /></button></div></div></div><div className="container footer-bottom"><span>© 2024 SkillCart, Inc. Made for the next move.</span><div className="socials"><a href="#contact" aria-label="Twitter"><FaTwitter size={16} /></a><a href="#contact" aria-label="LinkedIn"><FaLinkedin size={16} /></a><a href="#contact" aria-label="Search"><Search size={16} /></a></div><span>Made with intention <span className="heart">♥</span></span></div></footer>
   </div>
 }
 
