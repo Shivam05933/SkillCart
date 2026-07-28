@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "npx vite build",
-    "lint": "eslint .",
+    "build": "vite build",
+    "lint": "oxlint",
     "preview": "vite preview"
   },
   "dependencies": {
