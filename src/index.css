@@ -1918,7 +1918,5 @@ button {
         gap: 17px;
     }
 
-    .footer-bottom>span:last-child {
-        display: none;
-    }
+   
 }
