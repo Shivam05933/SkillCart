@@ -1913,7 +1913,10 @@ button {
         grid-column: span 2;
     }
 
-
+    .footer-bottom {
+        flex-wrap: wrap;
+        gap: 17px;
+    }
 
     .footer-bottom>span:last-child {
         display: none;
