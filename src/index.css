@@ -1854,7 +1854,11 @@ button {
         padding: 20px 15px 20px;
     }
 
-
+    .showcase-columns {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        margin-top: 22px;
+    }
 
     .metric-panel {
         min-height: 130px;
