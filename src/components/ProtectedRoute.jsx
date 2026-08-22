@@ -3,12 +3,13 @@ import { useAuth } from "../context/AuthContext";
 
 /**
  * ProtectedRoute component for route protection and onboarding flow control.
- * Rules:
- * 1. Unauthenticated users are redirected to "/auth".
- * 2. Authenticated users with isNewUser = true are forced to "/resume".
- * 3. Authenticated users with isNewUser = false are blocked from "/resume" and redirected to "/home".
+ *
+ * NOTE: Route protection logic is COMMENTED OUT below to allow open access.
+ * Uncomment the logic block below to re-enable strict route authentication.
  */
 export default function ProtectedRoute({ children }) {
+  /*
+  // ── ORIGINAL ROUTE PROTECTION LOGIC (COMMENTED OUT) ──
   const { isAuthenticated, isNewUser } = useAuth();
   const location = useLocation();
 
@@ -26,6 +27,8 @@ export default function ProtectedRoute({ children }) {
   if (!isNewUser && location.pathname === "/resume") {
     return <Navigate to="/home" replace />;
   }
+  */
 
+  // Direct bypass — allows open access to all wrapped components
   return children;
 }

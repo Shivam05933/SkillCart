@@ -484,7 +484,7 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="container footer-bottom">
-          <span>© 2024 SkillCart, Inc. Made for the next move.</span>
+          <span>© 2026 SkillCart, Inc. Made for the next move.</span>
           <div className="socials">
             <a href="#contact" aria-label="Twitter">
               <FaTwitter size={16} />

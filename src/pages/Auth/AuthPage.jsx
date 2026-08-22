@@ -366,7 +366,7 @@ export default function AuthPage() {
 
       {/* Footer */}
       <footer className="w-full max-w-7xl mx-auto px-6 py-4 text-center text-xs text-[#68756f] z-10">
-        © 2024 SkillCart, Inc. All rights reserved.
+        © 2026 SkillCart, Inc. All rights reserved.
       </footer>
     </div>
   );

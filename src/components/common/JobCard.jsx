@@ -8,16 +8,49 @@ import {
   Building2,
   Bookmark,
   ArrowUpRight,
+  Sparkles,
+  Zap,
 } from "lucide-react";
 
-export default function JobCard({ job }) {
-  const [saved, setSaved] = useState(false);
+import EvaluateFitButton from "./EvaluateFitButton";
+import JobEvaluationModal from "./JobEvaluationModal";
+/**
+ * Helper to generate deterministic gradient background based on company name
+ */
+function getCompanyGradient(name = "J") {
+  const charCode = name.charCodeAt(0) || 74;
+  const gradients = [
+    "from-[#123c2c] to-[#19714e] text-[#b9ef84]",
+    "from-indigo-900 to-purple-800 text-purple-200",
+    "from-emerald-900 to-teal-700 text-teal-200",
+    "from-cyan-900 to-blue-800 text-cyan-200",
+    "from-slate-900 to-emerald-900 text-emerald-300",
+  ];
+  return gradients[charCode % gradients.length];
+}
+
+/**
+ * Helper to style work mode badge with distinct color combinations
+ */
+function getWorkModeBadge(mode = "On-site") {
+  const modeLower = mode.toLowerCase();
+  if (modeLower.includes("remote")) {
+    return "bg-teal-50 text-teal-700 border-teal-200/80";
+  }
+  if (modeLower.includes("hybrid")) {
+    return "bg-indigo-50 text-indigo-700 border-indigo-200/80";
+  }
+  return "bg-amber-50 text-amber-700 border-amber-200/80";
+}
+
+export default function JobCard({ job, resId, onClick, isSaved, onToggleSave, saving = false, }) {
+  const saved = isSaved ?? false;
 
   // Helper to format currency salary cleanly
   const formatSalary = (min, max, currency) => {
-    if (!min && !max) return "Competitive";
+    if (!min && !max) return "Competitive Salary";
     const symbol = currency === "INR" ? "₹" : currency === "USD" ? "$" : `${currency} `;
-    
+
     if (currency === "INR" && (min >= 100000 || max >= 100000)) {
       const minL = (min / 100000).toFixed(min % 100000 === 0 ? 0 : 1);
       const maxL = (max / 100000).toFixed(max % 100000 === 0 ? 0 : 1);
@@ -28,7 +61,7 @@ export default function JobCard({ job }) {
 
   // Helper to format experience range
   const formatExperience = (min, max) => {
-    if (min === 0 && max === 0) return "Freshers / Entry Level";
+    if (min === 0 && max === 0) return "Freshers / Entry";
     if (min === 0 && max === 1) return "0–1 yrs exp";
     return `${min}–${max} yrs exp`;
   };
@@ -41,7 +74,6 @@ export default function JobCard({ job }) {
       return d.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
-        year: "numeric",
       });
     } catch {
       return dateStr;
@@ -49,41 +81,60 @@ export default function JobCard({ job }) {
   };
 
   const isClosingSoon = job.status?.toUpperCase() === "CLOSING SOON";
+  const avatarGradient = getCompanyGradient(job.company_name);
+  const workModeStyle = getWorkModeBadge(job.work_mode);
+
+  const handleBookmarkClick = (e) => {
+    e.stopPropagation();
+
+    if (onToggleSave && !saving) {
+      onToggleSave(job);
+    }
+  };
+  const [evaluationResult, setEvaluationResult] =
+    useState(null);
 
   return (
     <motion.article
-      initial={{ opacity: 0, y: 12 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className="bg-white border border-[#dfe7e2] rounded-2xl p-5 shadow-xs hover:shadow-md hover:border-[#19714e]/40 transition-colors flex flex-col justify-between group cursor-pointer"
+      whileHover={{
+        y: -5,
+        scale: 1.01,
+        transition: { duration: 0.22, ease: "easeOut" },
+      }}
+      onClick={onClick}
+      className="bg-white border border-[#dfe7e2] rounded-2xl sm:rounded-3xl p-4 sm:p-6 shadow-xs hover:shadow-xl hover:shadow-[#19714e]/10 hover:border-[#19714e]/50 transition-all flex flex-col justify-between group cursor-pointer relative overflow-hidden"
     >
+      {/* Top Accent Gradient Border Bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-[#123c2c] via-[#19714e] to-[#b9ef84] opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+
       <div>
-        
         {/* Top Header: Company Avatar, Title, Status & Bookmark */}
-        <div className="flex items-start justify-between gap-3 mb-3">
-          <div className="flex items-start gap-3">
+        <div className="flex items-start justify-between gap-2.5 mb-3">
+          <div className="flex items-start gap-2.5 sm:gap-3.5 flex-1 min-w-0">
             {/* Company Logo Badge */}
             <motion.div
-              whileHover={{ scale: 1.08, rotate: 3 }}
-              className="w-11 h-11 rounded-xl bg-[#123c2c] text-[#b9ef84] font-bold text-sm flex items-center justify-center shrink-0 shadow-xs font-['Space_Grotesk'] group-hover:bg-[#19714e] transition-colors"
+              whileHover={{ scale: 1.1, rotate: 4 }}
+              className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl bg-gradient-to-br ${avatarGradient} font-bold text-sm sm:text-base flex items-center justify-center shrink-0 shadow-md font-['Space_Grotesk'] border border-white/20`}
             >
               {job.company_name ? job.company_name.charAt(0).toUpperCase() : "J"}
             </motion.div>
 
-            <div>
+            <div className="flex-1 min-w-0">
               {/* Job Title */}
-              <h3 className="font-bold text-base text-[#12221d] font-['Space_Grotesk'] group-hover:text-[#19714e] transition-colors line-clamp-1">
+              <h3 className="font-bold text-sm sm:text-lg text-[#12221d] font-['Space_Grotesk'] group-hover:text-[#19714e] transition-colors line-clamp-1 leading-snug">
                 {job.job_title}
               </h3>
-              
-              {/* Company Name */}
-              <p className="text-xs font-medium text-[#68756f] flex items-center gap-1.5 mt-0.5">
-                <Building2 size={13} className="text-[#19714e]" />
-                <span className="text-[#12221d]">{job.company_name}</span>
+
+              {/* Company Name & Dept */}
+              <p className="text-[11px] sm:text-xs font-medium text-[#68756f] flex items-center gap-1 mt-0.5 truncate">
+                <Building2 size={13} className="text-[#19714e] shrink-0" />
+                <span className="text-[#12221d] font-semibold truncate">{job.company_name}</span>
                 {job.department && (
                   <>
-                    <span>•</span>
-                    <span className="text-[#68756f]">{job.department}</span>
+                    <span className="text-[#68756f]/50">•</span>
+                    <span className="text-[#68756f] truncate">{job.department}</span>
                   </>
                 )}
               </p>
@@ -92,57 +143,67 @@ export default function JobCard({ job }) {
 
           {/* Bookmark Action */}
           <motion.button
-            whileTap={{ scale: 0.85 }}
-            onClick={(e) => {
-              e.stopPropagation();
-              setSaved(!saved);
-            }}
-            className={`p-2 rounded-xl transition-colors shrink-0 ${
-              saved
-                ? "bg-[#dff8eb] text-[#19714e]"
-                : "hover:bg-[#f7faf8] text-[#68756f] hover:text-[#12221d]"
-            }`}
-            title={saved ? "Saved" : "Save Job"}
+            whileHover={{ scale: saving ? 1 : 1.15 }}
+            whileTap={{ scale: saving ? 1 : 0.85 }}
+            onClick={handleBookmarkClick}
+            disabled={saving}
+            className={`p-2 sm:p-2.5 rounded-xl sm:rounded-2xl transition-all duration-200 shrink-0 border ${saved
+                ? "bg-[#dff8eb] text-[#19714e] border-[#19714e]/30 shadow-xs"
+                : "bg-[#f7faf8] text-[#68756f] border-[#dfe7e2] hover:text-[#12221d] hover:bg-white"
+              }`}
+            title={
+              saving
+                ? "Saving..."
+                : saved
+                  ? "Saved"
+                  : "Save Job"
+            }
           >
-            <Bookmark size={17} className={saved ? "fill-[#19714e]" : ""} />
+            <Bookmark
+              size={16}
+              className={saved ? "fill-[#19714e]" : ""}
+            />
           </motion.button>
         </div>
 
         {/* Badges Row: Work Mode, Employment Type, Status */}
         <div className="flex flex-wrap items-center gap-1.5 my-3">
-          <span className="text-[11px] font-semibold text-[#19714e] bg-[#dff8eb] px-2.5 py-0.5 rounded-lg border border-[#dff8eb]">
+          <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl border ${workModeStyle}`}>
             {job.work_mode || "On-site"}
           </span>
-          <span className="text-[11px] font-medium text-[#12221d] bg-[#f7faf8] border border-[#dfe7e2] px-2.5 py-0.5 rounded-lg">
+
+          <span className="text-[10px] sm:text-[11px] font-semibold text-[#12221d] bg-[#f7faf8] border border-[#dfe7e2] px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-xl">
             {job.employment_type || "Full-Time"}
           </span>
+
           {isClosingSoon && (
-            <span className="text-[11px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-lg">
-              Closing Soon
+            <span className="text-[10px] sm:text-[11px] font-bold text-rose-700 bg-rose-50 border border-rose-200 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl animate-pulse">
+              🔥 Closing Soon
             </span>
           )}
+
           {job.industry && (
-            <span className="text-[11px] text-[#68756f] bg-white border border-[#dfe7e2] px-2 py-0.5 rounded-lg truncate max-w-[180px]">
+            <span className="text-[10px] sm:text-[11px] font-medium text-[#68756f] bg-white border border-[#dfe7e2] px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-xl truncate max-w-[130px] sm:max-w-[170px]">
               {job.industry}
             </span>
           )}
         </div>
 
         {/* Job Details Meta Grid */}
-        <div className="grid grid-cols-2 gap-2 my-4 pt-3 border-t border-[#dfe7e2]/60 text-xs text-[#68756f]">
-          <div className="flex items-center gap-1.5 truncate">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 my-3.5 pt-3 border-t border-[#dfe7e2]/70 text-xs text-[#68756f]">
+          <div className="flex items-center gap-2 truncate p-2 rounded-xl bg-[#f7faf8]/60 border border-[#dfe7e2]/50">
             <MapPin size={14} className="text-[#19714e] shrink-0" />
-            <span className="truncate">{job.location || "Multiple Locations"}</span>
+            <span className="truncate font-medium text-[#12221d]">{job.location || "Multiple Locations"}</span>
           </div>
 
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2 truncate p-2 rounded-xl bg-[#f7faf8]/60 border border-[#dfe7e2]/50">
             <Briefcase size={14} className="text-[#19714e] shrink-0" />
-            <span>{formatExperience(job.experience_min, job.experience_max)}</span>
+            <span className="truncate font-medium text-[#12221d]">{formatExperience(job.experience_min, job.experience_max)}</span>
           </div>
 
-          <div className="flex items-center gap-1.5 col-span-2 text-[#12221d] font-semibold mt-0.5">
-            <IndianRupee size={14} className="text-[#19714e] shrink-0" />
-            <span className="font-mono text-xs">
+          <div className="flex items-center gap-2 col-span-1 sm:col-span-2 text-[#19714e] font-bold p-2.5 rounded-xl bg-[#dff8eb]/50 border border-[#19714e]/20 mt-0.5">
+            <IndianRupee size={15} className="shrink-0" />
+            <span className="font-mono text-xs text-[#123c2c]">
               {formatSalary(job.salary_min, job.salary_max, job.currency)}
             </span>
           </div>
@@ -150,28 +211,80 @@ export default function JobCard({ job }) {
 
       </div>
 
-      {/* Footer Actions: Posted Date & Apply Button */}
-      <div className="pt-3 border-t border-[#dfe7e2]/70 flex items-center justify-between gap-2 text-xs">
-        <div className="flex items-center gap-1 text-[#68756f] text-[11px] font-mono">
-          <Clock size={13} />
-          <span>Posted {formatDate(job.posted_date)}</span>
-        </div>
+      <div className="flex items-center justify-between w-full gap-2">
 
-        {/* Apply Button */}
+        {/* EVALUATE FIT */}
+
+        <EvaluateFitButton
+          job={job}
+          resId={resId}
+          onResult={(result) => {
+            setEvaluationResult(
+              result
+            );
+          }}
+        />
+
+
+        {/* APPLY */}
+
         <motion.button
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
+          type="button"
+          whileHover={{
+            scale: 1.06,
+          }}
+          whileTap={{
+            scale: 0.94,
+          }}
           onClick={(e) => {
             e.stopPropagation();
-            // TODO: Add job details page navigation
+
+            // Keep your existing Apply functionality
           }}
-          className="inline-flex items-center gap-1 px-3.5 py-1.5 bg-[#123c2c] hover:bg-[#19714e] text-white text-xs font-semibold rounded-xl transition-colors shadow-xs"
+          className="
+  inline-flex
+  items-center
+  justify-center
+  gap-1.5
+  h-12
+  px-5
+  rounded-2xl
+  bg-[#123c2c]
+  hover:bg-[#19714e]
+  text-white
+  text-sm
+  font-semibold
+  transition-all
+  shadow-md
+  shadow-[#123c2c]/15
+"
         >
-          <span>Apply</span>
-          <ArrowUpRight size={14} />
+
+          <span>
+            Apply
+          </span>
+
+          <ArrowUpRight
+            size={15}
+          />
+
         </motion.button>
+
       </div>
 
     </motion.article>
   );
+  {
+    evaluationResult && (
+      <JobEvaluationModal
+        result={evaluationResult}
+        onClose={() => {
+          setEvaluationResult(
+            null
+          );
+        }}
+      />
+    )
+  }
 }
+

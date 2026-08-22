@@ -3,7 +3,7 @@
  * Connects to backend server at http://10.111.57.91:8081.
  */
 
-const BASE_URL = "http://10.111.57.91:8081";
+const BASE_URL = "http://10.119.82.91:8081";
 
 async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;

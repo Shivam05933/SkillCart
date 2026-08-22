@@ -14,14 +14,18 @@ export default function AppRoutes() {
       <Route path="/" element={<LandingPage />} />
       <Route path="/auth" element={<AuthPage />} />
       <Route path="/login" element={<AuthPage />} />
+      
 
-      {/* Protected routes wrapped in ProtectedRoute component */}
+      {/* 
+        Protected routes wrapped in ProtectedRoute component.
+        Note: Route protection checks inside ProtectedRoute are currently commented out for open access.
+      */}
       <Route
         path="/resume"
         element={
-         
+          <ProtectedRoute>
             <ResumePage />
-         
+          </ProtectedRoute>
         }
       />
       <Route
@@ -45,15 +49,15 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <ForYouPage />
-         </ProtectedRoute>
+          </ProtectedRoute>
         }
       />
       <Route
         path="/foryou"
         element={
-           <ProtectedRoute>
+          <ProtectedRoute>
             <ForYouPage />
-         </ProtectedRoute>
+          </ProtectedRoute>
         }
       />
       <Route
@@ -61,7 +65,7 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <Navigate to="/resume" replace />
-         </ProtectedRoute>
+          </ProtectedRoute>
         }
       />
 

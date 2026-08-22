@@ -3,9 +3,64 @@
  * Base URL: http://10.111.57.115:8000
  */
 
-const RESUME_BASE_URL = "http://10.111.57.91:8082";
+const RESUME_BASE_URL = "http://10.119.82.91:8082";
 const GENERATE_RESUME_BASE_URL = "https://skillcart-ai.onrender.com";
 const PROXY_RESUME_URL = "/api-proxy/resume-server";
+
+/**
+ * Helper function to extract `res_id` from backend response string or object
+ * e.g., "File Uploaded Succesfully for Rid81" or "File Uploaded Succesfully for Rid 81"
+ * @param {string|Object} apiResult 
+ * @returns {string|null} Extracted ID or null
+ */
+export function extractRidFromResponse(apiResult) {
+  if (!apiResult) return null;
+
+  // Convert response to string representation
+  let strToSearch = "";
+  if (typeof apiResult === "string") {
+    strToSearch = apiResult;
+  } else if (typeof apiResult === "object") {
+    strToSearch = [
+      apiResult.message,
+      apiResult.detail,
+      apiResult.msg,
+      apiResult.text,
+      apiResult.data?.message,
+      apiResult.data?.detail,
+      JSON.stringify(apiResult),
+    ]
+      .filter(Boolean)
+      .join(" ");
+  }
+
+  // Match pattern "File Uploaded Succesfully for Rid" followed by id
+  // Matches "File Uploaded Succesfully for Rid81", "File Uploaded Succesfully for Rid 81", "for Rid_81", "Rid-81"
+  const match =
+    strToSearch.match(/File Uploaded Succesfully for Rid\s*[:\-_]?\s*([a-zA-Z0-9_-]+)/i) ||
+    strToSearch.match(/for\s*Rid\s*[:\-_]?\s*([a-zA-Z0-9_-]+)/i) ||
+    strToSearch.match(/Rid\s*[:\-_]?\s*([a-zA-Z0-9_-]+)/i);
+
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
+  // Fallback to direct field check on response object
+  if (typeof apiResult === "object") {
+    return (
+      apiResult.res_id ||
+      apiResult.resume_id ||
+      apiResult.rid ||
+      apiResult.data?.res_id ||
+      apiResult.data?.resume_id ||
+      apiResult.data?.id ||
+      apiResult.id ||
+      null
+    );
+  }
+
+  return null;
+}
 
 export const resumeService = {
   /**
@@ -14,10 +69,6 @@ export const resumeService = {
    * @param {Object} payload - Candidate resume data
    * @returns {Promise<Object>} API response details containing data.download_url
    */
-  // BACKEND API:
-  // https://skillcart-ai.onrender.com
-  // TODO: Confirm/adjust the exact endpoint path if backend documentation changes.
-  // Do not change the request body structure.
   generateResume: async (payload) => {
     const token = localStorage.getItem("token") || (typeof window !== "undefined" ? window.__APP_TOKEN__ : "");
     const validToken = token && token !== "undefined" && token !== "null" && token.trim() !== "";
@@ -53,31 +104,32 @@ export const resumeService = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
-          errorData.error ||
-          errorData.detail ||
-          `Resume generation request failed with status ${response.status}`
+        errorData.error ||
+        errorData.detail ||
+        `Resume generation request failed with status ${response.status}`
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    const extractedRid = extractRidFromResponse(data);
+    if (extractedRid) {
+      localStorage.setItem("res_id", extractedRid);
+      localStorage.setItem("resume_id", extractedRid);
+    }
+    return data;
   },
 
   /**
    * Upload resume file (PDF / DOC / DOCX)
    * Endpoint: POST http://10.111.57.115:8000/api/v1/resume/upload
-   * Appends 'file' and 'resume' form fields for backend compatibility
+   * Parses "File Uploaded Succesfully for Rid" + id response to set res_id for For-You page.
    * @param {File} file
    * @returns {Promise<Object>} API response details / analysis
    */
   uploadResume: async (file) => {
-    // TODO: Backend API (friend's server)
-    // DO NOT CHANGE THIS ENDPOINT
-    // TODO: Fix token handling properly
-    // TODO: Handle token securely (cookies/localStorage later)
     const token = localStorage.getItem("token") || (typeof window !== "undefined" ? window.__APP_TOKEN__ : "");
     const validToken = token && token !== "undefined" && token !== "null" && token.trim() !== "";
 
-    // Build multipart FormData appending both 'file' and 'resume' field keys
     const formData = new FormData();
     formData.append("file", file);
     formData.append("resume", file);
@@ -117,19 +169,67 @@ export const resumeService = {
       const errorData = await response.json().catch(() => ({}));
       throw new Error(
         errorData.message ||
-          errorData.error ||
-          errorData.detail ||
-          `Backend resume upload failed with status ${response.status}`
+        errorData.error ||
+        errorData.detail ||
+        `Backend resume upload failed with status ${response.status}`
       );
     }
 
-    return response.json();
+    const data = await response.json();
+    const extractedRid = extractRidFromResponse(data);
+    if (extractedRid) {
+      localStorage.setItem("res_id", extractedRid);
+      localStorage.setItem("resume_id", extractedRid);
+    }
+    return data;
+  },
+
+  analyzeResume: async (file) => {
+    const token =
+      localStorage.getItem("token") ||
+      (typeof window !== "undefined"
+        ? window.__APP_TOKEN__
+        : "");
+
+    const validToken =
+      token &&
+      token !== "undefined" &&
+      token !== "null" &&
+      token.trim() !== "";
+
+    const formData = new FormData();
+
+    formData.append("file", file);
+
+    const response = await fetch(
+      `${GENERATE_RESUME_BASE_URL}/api/v1/resume/analyze`,
+      {
+        method: "POST",
+        headers: {
+          ...(validToken
+            ? { Authorization: `Bearer ${token}` }
+            : {}),
+        },
+        body: formData,
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+
+      throw new Error(
+        errorData.message ||
+        errorData.error ||
+        errorData.detail ||
+        `Resume analysis failed with status ${response.status}`
+      );
+    }
+
+    return await response.json();
   },
 
   /**
    * Triggers download of generated resume via backend download_url
-   * @param {string} downloadUrl - The download link from backend response (e.g. data.download_url)
-   * @param {string} [filename] - Default file name for download
    */
   downloadResume: async (downloadUrl, filename = "SkillCart-Resume.pdf") => {
     if (!downloadUrl) {
@@ -164,7 +264,6 @@ export const resumeService = {
       console.warn("Blob fetch failed for resume download, using direct download anchor fallback:", err);
     }
 
-    // Direct anchor link click trigger (bypasses CORS restrictions)
     const link = document.createElement("a");
     link.href = downloadUrl;
     link.target = "_blank";
@@ -177,3 +276,4 @@ export const resumeService = {
 };
 
 export default resumeService;
+
