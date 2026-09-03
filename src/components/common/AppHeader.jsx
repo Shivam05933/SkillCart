@@ -1,13 +1,66 @@
+import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Home, Briefcase, Sparkles, BookmarkCheck, LogOut, User } from "lucide-react";
 import Logo from "../ui/Logo";
 import { useAuth } from "../../context/AuthContext";
+import UserProfileModal from "./UserProfileModal";
 
 export default function AppHeader() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+
+  // Extract current user ID from storage / JWT fallback
+  const getCurrentUserId = () => {
+    try {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        try {
+          const userObj = JSON.parse(savedUser);
+          const id = userObj?.id || userObj?.userId || userObj?._id;
+          if (id) return id;
+        } catch (e) {}
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token || typeof token !== "string" || !token.includes(".") || token === "null" || token === "undefined") {
+        return null;
+      }
+
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload?.userId || payload?.id || (payload?.sub && !isNaN(payload?.sub) ? payload?.sub : null) || null;
+    } catch {
+      return null;
+    }
+  };
+
+  const getUsernameFromStorage = () => {
+    try {
+      const savedUser = localStorage.getItem("user");
+      if (savedUser) {
+        try {
+          const userObj = JSON.parse(savedUser);
+          const name = userObj?.username || userObj?.name;
+          if (name) return name;
+        } catch (e) {}
+      }
+
+      const token = localStorage.getItem("token");
+      if (!token || typeof token !== "string" || !token.includes(".") || token === "null" || token === "undefined") {
+        return "User";
+      }
+
+      const payload = JSON.parse(atob(token.split(".")[1]));
+      return payload?.username || payload?.name || payload?.sub || "User";
+    } catch {
+      return "User";
+    }
+  };
+
+  const currentUserId = user?.id || user?.userId || getCurrentUserId();
+  const currentUsername = user?.username || getUsernameFromStorage();
 
   const navItems = [
     { label: "HOME", path: "/home", icon: Home },
@@ -30,11 +83,12 @@ export default function AppHeader() {
         transition={{ duration: 0.4, ease: "easeOut" }}
         className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-xl border-b border-[#dfe7e2]/90 shadow-2xs font-sans"
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 sm:h-17 flex items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto px-3.5 sm:px-6 lg:px-8 h-15 sm:h-17 flex items-center justify-between gap-3">
           
           {/* Left: Brand Logo */}
           <motion.div
             whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
             className="flex items-center shrink-0 cursor-pointer"
             onClick={() => navigate("/home")}
           >
@@ -81,19 +135,21 @@ export default function AppHeader() {
           </nav>
 
           {/* Right: User Profile Controls & Logout */}
-          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-            <div className="flex items-center gap-2 pl-2 border-l border-[#dfe7e2]">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+            <div className="flex items-center gap-1.5 sm:gap-2 pl-2 border-l border-[#dfe7e2]">
+              {/* Profile Information Trigger Button */}
               <motion.div
-                whileHover={{ scale: 1.08 }}
-                onClick={() => navigate("/resume")}
-                title="View Profile / Resume"
-                className="flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-[#f7faf8] hover:bg-[#dff8eb] border border-[#dfe7e2] cursor-pointer transition-all"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setIsProfileOpen(true)}
+                title="View Profile Information"
+                className="flex items-center gap-2 px-2 sm:px-2.5 py-1.5 rounded-2xl bg-[#f7faf8] hover:bg-[#dff8eb] border border-[#dfe7e2] cursor-pointer transition-all"
               >
                 <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-[#123c2c] to-[#19714e] text-[#b9ef84] flex items-center justify-center font-bold text-xs shadow-xs font-['Space_Grotesk'] shrink-0">
-                  {user?.username ? user.username.charAt(0).toUpperCase() : <User size={14} />}
+                  {currentUsername ? currentUsername.charAt(0).toUpperCase() : <User size={14} />}
                 </div>
                 <span className="hidden md:inline-block text-xs font-bold text-[#12221d]">
-                  {user?.username || "Account"}
+                  {currentUsername || "Account"}
                 </span>
               </motion.div>
 
@@ -102,9 +158,9 @@ export default function AppHeader() {
                 whileTap={{ scale: 0.9 }}
                 onClick={handleLogout}
                 title="Sign Out"
-                className="p-2 rounded-xl text-[#68756f] hover:bg-red-50 hover:text-red-600 transition-colors shrink-0"
+                className="p-1.5 sm:p-2 rounded-xl text-[#68756f] hover:bg-red-50 hover:text-red-600 transition-colors shrink-0 cursor-pointer"
               >
-                <LogOut size={17} />
+                <LogOut size={16} />
               </motion.button>
             </div>
           </div>
@@ -112,7 +168,7 @@ export default function AppHeader() {
       </motion.header>
 
       {/* ── BOTTOM MOBILE NAVIGATION BAR (Mobile Screens < 640px) ── */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-[#dfe7e2] px-2 py-2 flex items-center justify-around shadow-lg">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-[#dfe7e2] px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] flex items-center justify-around shadow-lg">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isSavedTab = item.path.includes("view=saved");
@@ -125,7 +181,7 @@ export default function AppHeader() {
             <Link
               key={item.path}
               to={item.path}
-              className={`relative flex flex-col items-center gap-1 px-2.5 py-1 rounded-2xl text-[10px] font-bold transition-all ${
+              className={`relative flex flex-col items-center justify-center gap-0.5 px-3 py-1 rounded-xl text-[10px] font-bold transition-all ${
                 isActive
                   ? "text-[#19714e]"
                   : "text-[#68756f] hover:text-[#12221d]"
@@ -135,17 +191,30 @@ export default function AppHeader() {
                 <motion.div
                   layoutId="activeNavPillMobile"
                   transition={{ type: "spring", stiffness: 400, damping: 32 }}
-                  className="absolute inset-0 bg-[#dff8eb] rounded-2xl border border-[#19714e]/20"
+                  className="absolute inset-0 bg-[#dff8eb] rounded-xl border border-[#19714e]/20"
                 />
               )}
-              <span className="relative z-10 flex flex-col items-center gap-1">
-                <Icon size={17} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "text-[#19714e]" : "text-[#68756f]"} />
-                <span>{item.label}</span>
+              <span className="relative z-10 flex flex-col items-center gap-0.5">
+                <Icon size={18} strokeWidth={isActive ? 2.5 : 2} className={isActive ? "text-[#19714e]" : "text-[#68756f]"} />
+                <span className="tracking-tight">{item.label}</span>
               </span>
             </Link>
           );
         })}
       </nav>
+
+      {/* ── USER PROFILE INFORMATION MODAL ── */}
+      {isProfileOpen && (
+        <UserProfileModal
+          isOpen={isProfileOpen}
+          onClose={() => setIsProfileOpen(false)}
+          userId={currentUserId}
+          initialUser={{ username: currentUsername }}
+          initialTab="posts"
+        />
+      )}
     </>
   );
 }
+
+
