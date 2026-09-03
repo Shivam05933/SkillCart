@@ -9,13 +9,12 @@ import {
   X,
 } from "lucide-react";
 
-import {
-  useEffect,
-  useState,
-} from "react";
-
+import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import socialService from "../../services/socialService";
 import UserHeader from "./UserHeader";
+import UserProfileModal from "./UserProfileModal";
+import CommentSkeleton from "./CommentSkeleton";
 
 // ============================================================
 // GET CURRENT USER ID FROM JWT
@@ -92,7 +91,33 @@ export default function PostCard({
   const [postUser, setPostUser] =
     useState(null);
 
+  const [activeProfileUserId, setActiveProfileUserId] = useState(null);
+  const [activeProfileInitialUser, setActiveProfileInitialUser] = useState(null);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
   const postAuthorId = post?.userId || post?.user_id || post?.authorId;
+
+  const handleOpenProfile = (targetUser, explicitUserId = null) => {
+    const targetId =
+      explicitUserId ||
+      targetUser?.id ||
+      targetUser?.userId ||
+      targetUser?.user_id ||
+      targetUser?.authorId ||
+      postAuthorId;
+
+    if (!targetId) return;
+
+    setActiveProfileUserId(String(targetId));
+    setActiveProfileInitialUser(targetUser || null);
+    setIsProfileModalOpen(true);
+  };
+
+  const handleModalFollowToggle = (userId, newFollowingState) => {
+    if (String(userId) === String(postAuthorId)) {
+      setIsFollowing(newFollowingState);
+    }
+  };
 
   const isMyPost = Boolean(
     post?.isMyPost ||
@@ -232,63 +257,33 @@ export default function PostCard({
   // ============================================================
 
   const handleFollow = async () => {
-
-    if (
-      followLoading ||
-      !post?.userId ||
-      isMyPost
-    ) {
+    if (followLoading || !post?.userId || isMyPost) {
       return;
     }
 
-    try {
+    const previousFollowing = isFollowing;
+    const nextFollowing = !previousFollowing;
 
+    try {
       setFollowLoading(true);
       setFollowError("");
+      setIsFollowing(nextFollowing);
 
-      if (isFollowing) {
-
-        await socialService.unfollowUser(
-          post.userId
-        );
-
-        setIsFollowing(false);
-
-        console.log(
-          "UNFOLLOW SUCCESS:",
-          post.userId
-        );
-
+      if (previousFollowing) {
+        await socialService.unfollowUser(post.userId);
+        console.log("UNFOLLOW SUCCESS:", post.userId);
       } else {
-
-        await socialService.followUser(
-          post.userId
-        );
-
-        setIsFollowing(true);
-
-        console.log(
-          "FOLLOW SUCCESS:",
-          post.userId
-        );
+        await socialService.followUser(post.userId);
+        console.log("FOLLOW SUCCESS:", post.userId);
       }
-
     } catch (error) {
-
-      console.error(
-        "FOLLOW / UNFOLLOW ERROR:",
-        error
-      );
-
+      console.error("FOLLOW / UNFOLLOW ERROR:", error);
+      setIsFollowing(previousFollowing);
       setFollowError(
-        error?.message ||
-          "Unable to update follow status."
+        error?.message || "Unable to update follow status."
       );
-
     } finally {
-
       setFollowLoading(false);
-
     }
   };
 
@@ -308,6 +303,10 @@ export default function PostCard({
 
   const [likeLoading, setLikeLoading] =
     useState(false);
+
+  const [isLikeAnimating, setIsLikeAnimating] = useState(false);
+  const [showHeartBurst, setShowHeartBurst] = useState(false);
+  const [showImageHeartPop, setShowImageHeartPop] = useState(false);
 
   // ============================================================
   // COMMENTS
@@ -383,6 +382,14 @@ export default function PostCard({
           } catch (e) {}
         }
       } else {
+        // Trigger rich micro-interaction animation
+        setIsLikeAnimating(true);
+        setShowHeartBurst(true);
+        setTimeout(() => {
+          setIsLikeAnimating(false);
+          setShowHeartBurst(false);
+        }, 800);
+
         // Optimistically update UI so liking happens immediately on click
         setLiked(true);
         setLikeCount((count) => count + 1);
@@ -400,6 +407,16 @@ export default function PostCard({
     } finally {
       setLikeLoading(false);
     }
+  };
+
+  const handleDoubleTapImage = () => {
+    if (!liked) {
+      handleLike();
+    }
+    setShowImageHeartPop(true);
+    setTimeout(() => {
+      setShowImageHeartPop(false);
+    }, 900);
   };
 
   const [deletingCommentId, setDeletingCommentId] = useState(null);
@@ -678,14 +695,22 @@ export default function PostCard({
 
   return (
     <>
-      <article
+      <motion.article
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.35, ease: "easeOut" }}
+        whileHover={{ y: -2 }}
         className="
           bg-white
           border
           border-[#dfe7e2]
+          hover:border-[#19714e]/30
           rounded-3xl
           overflow-hidden
           shadow-xs
+          hover:shadow-md
+          transition-all
+          duration-300
           relative
         "
       >
@@ -715,6 +740,7 @@ export default function PostCard({
             followLoading={followLoading}
             onFollow={handleFollow}
             isMyPost={isMyPost}
+            onOpenProfile={handleOpenProfile}
           />
 
           {/* ==================================================
@@ -850,8 +876,11 @@ export default function PostCard({
         ==================================================== */}
 
         {post?.imageUrl && (
-          <div className="px-5 pb-5">
-
+          <div
+            className="px-5 pb-5 relative select-none cursor-pointer overflow-hidden rounded-2xl group"
+            onDoubleClick={handleDoubleTapImage}
+            title="Double-click to like"
+          >
             <img
               src={post.imageUrl}
               alt="Post"
@@ -860,15 +889,35 @@ export default function PostCard({
                 max-h-[500px]
                 object-cover
                 rounded-2xl
+                transition-transform
+                duration-300
+                group-hover:scale-[1.01]
               "
               onError={(event) => {
-
-                event.currentTarget.style.display =
-                  "none";
-
+                event.currentTarget.style.display = "none";
               }}
             />
 
+            {/* BIG CENTER HEART BURST POP ON DOUBLE TAP */}
+            <AnimatePresence>
+              {showImageHeartPop && (
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-20">
+                  <motion.div
+                    initial={{ scale: 0, opacity: 0, rotate: -20 }}
+                    animate={{
+                      scale: [0, 1.4, 1.15, 1],
+                      opacity: [0, 1, 0.95, 0],
+                      rotate: [-20, 0, 10, 0],
+                    }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={{ duration: 0.85, ease: "easeOut" }}
+                    className="p-5 rounded-full bg-black/40 backdrop-blur-xs text-white shadow-2xl"
+                  >
+                    <Heart size={68} fill="#ef4444" className="text-red-500 drop-shadow-lg" />
+                  </motion.div>
+                </div>
+              )}
+            </AnimatePresence>
           </div>
         )}
 
@@ -889,12 +938,17 @@ export default function PostCard({
           "
         >
 
-          <span>
+          <motion.span
+            key={likeCount}
+            initial={{ scale: 0.85, opacity: 0.7 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.2 }}
+          >
             {likeCount}{" "}
             {likeCount === 1
               ? "like"
               : "likes"}
-          </span>
+          </motion.span>
 
           <span>
             {commentCount}{" "}
@@ -920,11 +974,11 @@ export default function PostCard({
           "
         >
 
-          {/* LIKE */}
+          {/* LIKE BUTTON WITH FRAMER MOTION ANIMATION */}
 
-          <button
+          <motion.button
             type="button"
-            disabled={likeLoading}
+            whileTap={{ scale: 0.9 }}
             onClick={handleLike}
             className={`
               flex-1
@@ -936,47 +990,100 @@ export default function PostCard({
               rounded-2xl
               text-xs
               font-bold
-              transition-all
-              disabled:opacity-50
+              transition-colors
+              relative
+              overflow-visible
+              cursor-pointer
+              select-none
 
               ${
                 liked
-                  ? "bg-red-50 text-red-600"
-                  : "text-[#68756f] hover:bg-[#f7faf8]"
+                  ? "bg-red-50 text-red-600 shadow-2xs"
+                  : "text-[#68756f] hover:bg-[#f7faf8] hover:text-[#12221d]"
               }
             `}
           >
+            {/* FLOATING PARTICLES BURST EFFECT ON LIKE */}
+            <AnimatePresence>
+              {showHeartBurst && (
+                <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+                  {/* Outer Ripple Wave */}
+                  <motion.div
+                    initial={{ scale: 0.3, opacity: 0.9 }}
+                    animate={{ scale: 2.2, opacity: 0 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.55, ease: "easeOut" }}
+                    className="absolute w-8 h-8 rounded-full border-2 border-red-500"
+                  />
+                  {/* 5 Flying Heart Particles */}
+                  {[
+                    { x: -18, y: -22, size: 10, color: "text-red-500", delay: 0 },
+                    { x: 18, y: -24, size: 9, color: "text-rose-500", delay: 0.04 },
+                    { x: -22, y: 12, size: 8, color: "text-pink-500", delay: 0.08 },
+                    { x: 22, y: 10, size: 10, color: "text-red-400", delay: 0.06 },
+                    { x: 0, y: -28, size: 12, color: "text-red-600", delay: 0.02 },
+                  ].map((p, i) => (
+                    <motion.div
+                      key={i}
+                      initial={{ scale: 0, x: 0, y: 0, opacity: 1 }}
+                      animate={{
+                        scale: [0, 1.3, 0.9, 0],
+                        x: p.x,
+                        y: p.y,
+                        opacity: [1, 1, 0.8, 0],
+                      }}
+                      exit={{ opacity: 0 }}
+                      transition={{ duration: 0.65, delay: p.delay, ease: "easeOut" }}
+                      className={`absolute ${p.color}`}
+                    >
+                      <Heart size={p.size} fill="currentColor" />
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </AnimatePresence>
 
-            {likeLoading ? (
-
-              <Loader2
-                size={16}
-                className="animate-spin"
-              />
-
-            ) : (
-
+            <motion.div
+              animate={
+                isLikeAnimating
+                  ? {
+                      scale: [1, 1.45, 0.88, 1.2, 1],
+                      rotate: [0, -18, 18, -6, 0],
+                    }
+                  : { scale: 1, rotate: 0 }
+              }
+              transition={{ duration: 0.5, ease: "easeOut" }}
+              className="inline-flex items-center justify-center"
+            >
               <Heart
                 size={16}
+                className={`transition-colors duration-200 ${
+                  liked ? "text-red-600 fill-red-600 drop-shadow-xs" : "text-current"
+                }`}
                 fill={
                   liked
                     ? "currentColor"
                     : "none"
                 }
               />
+            </motion.div>
 
-            )}
+            <motion.span
+              animate={isLikeAnimating ? { scale: [1, 1.15, 1] } : { scale: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              {liked
+                ? "Liked"
+                : "Like"}
+            </motion.span>
 
-            {liked
-              ? "Liked"
-              : "Like"}
+          </motion.button>
 
-          </button>
+          {/* COMMENT BUTTON */}
 
-          {/* COMMENT */}
-
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.94 }}
             onClick={
               handleCommentClick
             }
@@ -990,11 +1097,14 @@ export default function PostCard({
               rounded-2xl
               text-xs
               font-bold
+              transition-colors
+              cursor-pointer
+              select-none
 
               ${
                 showComments
                   ? "bg-[#f7faf8] text-[#19714e]"
-                  : "text-[#68756f] hover:bg-[#f7faf8]"
+                  : "text-[#68756f] hover:bg-[#f7faf8] hover:text-[#12221d]"
               }
             `}
           >
@@ -1005,23 +1115,28 @@ export default function PostCard({
 
             Comment
 
-          </button>
+          </motion.button>
 
         </div>
 
         {/* ====================================================
-            COMMENTS
+            COMMENTS (ANIMATED ACCORDION)
         ==================================================== */}
 
-        {showComments && (
-
-          <div
-            className="
-              border-t
-              border-[#dfe7e2]
-              bg-[#fbfcfb]
-            "
-          >
+        <AnimatePresence>
+          {showComments && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.28, ease: "easeInOut" }}
+              className="
+                border-t
+                border-[#dfe7e2]
+                bg-[#fbfcfb]
+                overflow-hidden
+              "
+            >
 
             {/* COMMENTS HEADER */}
 
@@ -1130,28 +1245,7 @@ export default function PostCard({
 
               {commentsLoading &&
               comments.length === 0 ? (
-
-                <div
-                  className="
-                    py-6
-                    flex
-                    items-center
-                    justify-center
-                    gap-2
-                    text-xs
-                    text-[#68756f]
-                  "
-                >
-
-                  <Loader2
-                    size={15}
-                    className="animate-spin"
-                  />
-
-                  Loading comments...
-
-                </div>
-
+                <CommentSkeleton count={2} />
               ) : comments.length === 0 ? (
 
                 <div
@@ -1231,15 +1325,26 @@ export default function PostCard({
                     }
 
                     return (
-                      <div
+                      <motion.div
                         key={comment.id || comment._id || Math.random()}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.22 }}
                         className="
                           flex
                           gap-3
                         "
                       >
                         <div
-                          className="
+                          onClick={() =>
+                            commentUserId &&
+                            handleOpenProfile(
+                              { username: authorName, id: commentUserId },
+                              commentUserId
+                            )
+                          }
+                          title={commentUserId ? `View ${authorName}'s profile` : undefined}
+                          className={`
                             w-8
                             h-8
                             rounded-xl
@@ -1253,7 +1358,13 @@ export default function PostCard({
                             text-[10px]
                             font-bold
                             shrink-0
-                          "
+                            select-none
+                            ${
+                              commentUserId
+                                ? "cursor-pointer hover:scale-105 transition-transform"
+                                : ""
+                            }
+                          `}
                         >
                           {authorInitial}
                         </div>
@@ -1276,11 +1387,24 @@ export default function PostCard({
                           >
                             <div className="flex items-center justify-between gap-2">
                               <p
-                                className="
+                                onClick={() =>
+                                  commentUserId &&
+                                  handleOpenProfile(
+                                    { username: authorName, id: commentUserId },
+                                    commentUserId
+                                  )
+                                }
+                                title={commentUserId ? `View ${authorName}'s profile` : undefined}
+                                className={`
                                   text-xs
                                   font-bold
                                   text-[#12221d]
-                                "
+                                  ${
+                                    commentUserId
+                                      ? "cursor-pointer hover:text-[#19714e] transition-colors"
+                                      : ""
+                                  }
+                                `}
                               >
                                 {authorName}
                               </p>
@@ -1340,7 +1464,7 @@ export default function PostCard({
                             )}
                           </p>
                         </div>
-                      </div>
+                      </motion.div>
                     );
                   }
                 )
@@ -1395,8 +1519,10 @@ export default function PostCard({
                 "
               />
 
-              <button
+              <motion.button
                 type="submit"
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.04 }}
                 disabled={
                   commentSubmitting ||
                   !commentText.trim()
@@ -1413,6 +1539,9 @@ export default function PostCard({
                   justify-center
                   shrink-0
                   disabled:opacity-50
+                  cursor-pointer
+                  transition-colors
+                  shadow-xs
                 "
               >
 
@@ -1431,14 +1560,15 @@ export default function PostCard({
 
                 )}
 
-              </button>
+              </motion.button>
 
             </form>
 
-          </div>
+          </motion.div>
         )}
+      </AnimatePresence>
 
-      </article>
+    </motion.article>
 
       {/* ======================================================
           DELETE CONFIRMATION
@@ -1631,6 +1761,23 @@ export default function PostCard({
 
         </div>
 
+      )}
+
+      {/* ======================================================
+          USER PROFILE MODAL
+      ====================================================== */}
+      {isProfileModalOpen && activeProfileUserId && (
+        <UserProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => {
+            setIsProfileModalOpen(false);
+            setActiveProfileUserId(null);
+            setActiveProfileInitialUser(null);
+          }}
+          userId={activeProfileUserId}
+          initialUser={activeProfileInitialUser}
+          onFollowToggle={handleModalFollowToggle}
+        />
       )}
 
     </>

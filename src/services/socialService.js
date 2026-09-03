@@ -29,6 +29,15 @@ const socialService = {
     );
   },
   // =====================================
+  // GET USER PROFILE
+  // =====================================
+
+  getProfile: (userId) =>
+    socialApi.get(
+      `/api/social/profiles/${userId}`
+    ),
+
+  // =====================================
   // GET HOME FEED
   // =====================================
 
@@ -98,7 +107,7 @@ const socialService = {
   getUserPosts: (
     userId,
     page = 0,
-    size = 50
+    size = 10
   ) =>
     socialApi.get(
       `/api/social/posts/user/${userId}?page=${page}&size=${size}`
@@ -166,31 +175,18 @@ const socialService = {
   },
 
   // ============================================================
-  // FOLLOW USER
+  // GET FOLLOWERS LIST
   // ============================================================
 
-  followUser: (userId) =>
-    socialApi.post(
-      `/api/social/users/${userId}/follow`
-    ),
-
-  // ============================================================
-  // UNFOLLOW USER
-  // ============================================================
-
-  unfollowUser: (userId) =>
-    socialApi.delete(
-      `/api/social/users/${userId}/follow`
-    ),
-
-  // ============================================================
-  // CHECK FOLLOWING STATUS
-  // ============================================================
-
-  getFollowingStatus: (userId) =>
-    socialApi.get(
-      `/api/social/users/${userId}/following-status`
-    ),
+  getFollowers: (userId, page, size) => {
+    const query =
+      page !== undefined && size !== undefined
+        ? `?page=${page}&size=${size}`
+        : "";
+    return socialApi.get(
+      `/api/social/users/${userId}/followers${query}`
+    );
+  },
 
   // ============================================================
   // FOLLOWERS COUNT
@@ -200,6 +196,20 @@ const socialService = {
     socialApi.get(
       `/api/social/users/${userId}/followers/count`
     ),
+
+  // ============================================================
+  // GET FOLLOWING LIST
+  // ============================================================
+
+  getFollowing: (userId, page, size) => {
+    const query =
+      page !== undefined && size !== undefined
+        ? `?page=${page}&size=${size}`
+        : "";
+    return socialApi.get(
+      `/api/social/users/${userId}/following${query}`
+    );
+  },
 
   // ============================================================
   // FOLLOWING COUNT

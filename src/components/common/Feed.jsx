@@ -1,8 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
+import { motion } from "framer-motion";
 import { RefreshCw, Loader2, Globe, Users } from "lucide-react";
 import socialService from "../../services/socialService";
 import PostCard from "./PostCard";
+import PostCardSkeleton from "./PostCardSkeleton";
 
 function getUserIdFromToken() {
   try {
@@ -49,6 +51,10 @@ export default function Feed({ newPost }) {
   const [error, setError] = useState("");
 
   const handleTabChange = (newTab) => {
+    if (newTab === activeTab) return;
+    setLoading(true);
+    setPosts([]);
+    setError("");
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       if (newTab === "all") {
@@ -176,8 +182,9 @@ export default function Feed({ newPost }) {
       {/* TABS HEADER: All Posts vs Following */}
       <div className="flex items-center justify-between flex-wrap gap-3 bg-white border border-[#dfe7e2] rounded-3xl p-3 shadow-xs">
         <div className="flex items-center gap-1.5 bg-[#f7faf8] border border-[#dfe7e2] p-1 rounded-2xl">
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.94 }}
             onClick={() => handleTabChange("all")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === "all"
@@ -187,10 +194,11 @@ export default function Feed({ newPost }) {
           >
             <Globe size={15} />
             <span>Gigs</span>
-          </button>
+          </motion.button>
 
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.94 }}
             onClick={() => handleTabChange("following")}
             className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer ${
               activeTab === "following"
@@ -200,7 +208,7 @@ export default function Feed({ newPost }) {
           >
             <Users size={15} />
             <span>Circle</span>
-          </button>
+          </motion.button>
         </div>
 
         <div className="flex items-center gap-2">
@@ -209,11 +217,13 @@ export default function Feed({ newPost }) {
               ? "Posts from people you follow"
               : "All community posts"}
           </span>
-          <button
+          <motion.button
             type="button"
+            whileTap={{ scale: 0.88, rotate: 180 }}
+            whileHover={{ scale: 1.06 }}
             onClick={loadFeed}
             disabled={loading}
-            className="p-2 rounded-xl bg-[#f7faf8] border border-[#dfe7e2] hover:bg-white text-[#19714e] disabled:opacity-50 transition-colors shrink-0 cursor-pointer"
+            className="p-2 rounded-xl bg-[#f7faf8] border border-[#dfe7e2] hover:bg-white text-[#19714e] disabled:opacity-50 transition-colors shrink-0 cursor-pointer shadow-2xs"
             title="Refresh feed"
           >
             {loading ? (
@@ -221,28 +231,14 @@ export default function Feed({ newPost }) {
             ) : (
               <RefreshCw size={16} className="text-[#19714e]" />
             )}
-          </button>
+          </motion.button>
         </div>
       </div>
 
       {/* LOADING SKELETON */}
-      {loading && posts.length === 0 && (
+      {loading && (
         <div className="space-y-4">
-          {[1, 2, 3].map((item) => (
-            <div
-              key={item}
-              className="bg-white border border-[#dfe7e2] rounded-3xl p-5 animate-pulse"
-            >
-              <div className="flex gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-[#dfe7e2]" />
-                <div className="flex-1">
-                  <div className="h-3 bg-[#dfe7e2] rounded w-1/3" />
-                  <div className="h-3 bg-[#dfe7e2] rounded w-1/4 mt-2" />
-                </div>
-              </div>
-              <div className="h-16 bg-[#dfe7e2] rounded-2xl mt-5" />
-            </div>
-          ))}
+          <PostCardSkeleton count={3} />
         </div>
       )}
 
@@ -285,7 +281,7 @@ export default function Feed({ newPost }) {
       )}
 
       {/* POSTS LIST */}
-      {posts.map((post) => (
+      {!loading && posts.map((post) => (
         <PostCard
           key={post.id || post._id}
           post={post}
