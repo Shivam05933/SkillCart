@@ -6,6 +6,7 @@ import JobsPage from "../pages/Jobs/JobsPage";
 import ForYouPage from "../pages/ForYou/ForYouPage";
 import ResumePage from "../pages/Resume/ResumePage";
 import InterviewPreparePage from "../pages/Interview/InterviewPreparePage";
+import UserProfilePage from "../pages/Profile/UserProfilePage";
 import ProtectedRoute from "../components/ProtectedRoute";
 
 export default function AppRoutes() {
@@ -98,6 +99,22 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute>
             <Navigate to="/resume" replace />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/user/:username"
+        element={
+          <ProtectedRoute>
+            <UserProfilePage />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/profile/:username"
+        element={
+          <ProtectedRoute>
+            <UserProfilePage />
           </ProtectedRoute>
         }
       />

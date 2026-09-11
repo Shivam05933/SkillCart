@@ -301,6 +301,28 @@ export default function JobsPage() {
         job.location ||
         "";
 
+      const projectRole =
+        job.project_role ||
+        "";
+
+      const summary =
+        job.summary ||
+        job.project_role_description ||
+        job.company_description ||
+        "";
+
+      const workMode =
+        job.work_mode ||
+        "";
+
+      const employmentType =
+        job.employment_type ||
+        "";
+
+      const source =
+        job.source ||
+        "";
+
       const requiredSkills = Array.isArray(
         job.required_skills
       )
@@ -316,9 +338,14 @@ export default function JobsPage() {
 
       const searchableText = [
         jobTitle,
+        projectRole,
         companyName,
         department,
         location,
+        workMode,
+        employmentType,
+        source,
+        summary,
         requiredSkills,
         preferredSkills,
       ]

@@ -2,7 +2,7 @@ import api from "./api";
 import saveJobService from "./savejobs";
 
 const JOBS_API_URL =
-  "https://skillcartcompany-4b97f884.fastapicloud.dev";
+  "https://skillcart-company-api.onrender.com";
 
 const AI_API_URL =
   "https://skillcart-ai.onrender.com";
@@ -206,9 +206,20 @@ export const jobService = {
     let recommendations =
       data?.data?.recommended_jobs ??
       data?.recommended_jobs ??
+      data?.matches ??
+      data?.jobs ??
       data?.results ??
       data?.data ??
       data;
+
+    if (!Array.isArray(recommendations)) {
+      if (typeof recommendations === "object" && recommendations !== null) {
+        const nestedList = Object.values(recommendations).find((v) => Array.isArray(v));
+        if (nestedList) {
+          recommendations = nestedList;
+        }
+      }
+    }
 
     if (!Array.isArray(recommendations)) {
       throw new Error(
@@ -229,23 +240,39 @@ export const jobService = {
     const jobs =
       await Promise.all(
         recommendations
-          .slice(0, 10)
+          .slice(0, 20)
           .map(async (item) => {
-            const jobId =
-              item?.job_id ??
-              item?.id ??
-              item?._id;
+            let jobId = null;
+            let rawScore = null;
 
-            const score = Number(
-              item?.score ??
-              item?.similarity ??
-              item?.match_score ??
-              0
-            );
+            if (typeof item === "number" || typeof item === "string") {
+              jobId = item;
+            } else if (typeof item === "object" && item !== null) {
+              jobId =
+                item?.job_id ??
+                item?.id ??
+                item?._id ??
+                item?.jobId ??
+                item?.job?.id ??
+                item?.job?.job_id;
+
+              rawScore =
+                item?.score ??
+                item?.similarity ??
+                item?.match_score ??
+                item?.fit_score ??
+                item?.matchScore ??
+                null;
+            }
 
             if (!jobId) {
               return null;
             }
+
+            const scoreNum = rawScore !== null && !isNaN(Number(rawScore)) ? Number(rawScore) : null;
+            const matchScore = scoreNum !== null
+              ? (scoreNum <= 1 && scoreNum > 0 ? Math.round(scoreNum * 100) : Math.round(scoreNum))
+              : null;
 
             try {
               const job =
@@ -255,19 +282,24 @@ export const jobService = {
 
               return {
                 ...job,
-                matchScore:
-                  score <= 1
-                    ? Math.round(
-                      score * 100
-                    )
-                    : Math.round(score),
-                match_score: score,
+                matchScore,
+                match_score: matchScore,
               };
             } catch (error) {
               console.error(
                 `Failed to load job ${jobId}:`,
                 error
               );
+
+              // If item itself already has job information, fallback to it
+              if (item && typeof item === "object" && (item.job_title || item.title)) {
+                return {
+                  ...item,
+                  id: jobId,
+                  matchScore,
+                  match_score: matchScore,
+                };
+              }
 
               return null;
             }
