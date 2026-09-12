@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 
 import {
@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Sparkles,
   Loader2,
+  Search,
 } from "lucide-react";
 
 import AppHeader from "../../components/common/AppHeader";
@@ -34,6 +35,21 @@ import { useAuth } from "../../context/AuthContext";
 import { useApp } from "../../context/AppContext";
 
 export default function HomePage() {
+  const navigate = useNavigate();
+
+  // ============================================================
+  // USER SEARCH
+  // ============================================================
+  const [searchUsername, setSearchUsername] = useState("");
+
+  const handleSearchUser = (e) => {
+    e?.preventDefault?.();
+    const clean = searchUsername.trim().replace(/^@/, "");
+    if (clean) {
+      navigate(`/user/${encodeURIComponent(clean)}`);
+      setSearchUsername("");
+    }
+  };
 
   // ============================================================
   // USERS
@@ -1437,7 +1453,7 @@ export default function HomePage() {
           >
 
             {/* ==================================================
-                CREATE POST
+                SEARCH USER BY USERNAME & START POST BAR
             ================================================== */}
 
             <motion.div
@@ -1449,174 +1465,169 @@ export default function HomePage() {
                 opacity: 1,
                 y: 0,
               }}
-              whileHover={{ scale: 1.01, y: -2 }}
-              whileTap={{ scale: 0.99 }}
-              onClick={() =>
-                setIsCreatePostOpen(
-                  true
-                )
-              }
               className="
                 bg-white
                 border
                 border-[#dfe7e2]
                 rounded-3xl
-                p-3.5
-                sm:p-4
+                p-3
+                sm:p-3.5
                 shadow-2xs
-                hover:shadow-md
-                hover:border-[#19714e]/50
-                cursor-pointer
                 transition-all
                 duration-200
                 flex
-                items-center
-                justify-between
-                gap-3
-                group
+                flex-col
+                sm:flex-row
+                items-stretch
+                sm:items-center
+                gap-2.5
+                sm:gap-3
               "
             >
-
-              <div
+              {/* SEARCH USER BY USERNAME */}
+              <form
+                onSubmit={handleSearchUser}
                 className="
+                  flex-1
                   flex
                   items-center
-                  gap-3
-                  flex-1
-                  min-w-0
+                  gap-2
+                  bg-[#f7faf8]
+                  hover:bg-[#dff8eb]/30
+                  focus-within:bg-white
+                  focus-within:ring-2
+                  focus-within:ring-[#19714e]/15
+                  border
+                  border-[#dfe7e2]
+                  focus-within:border-[#19714e]
+                  rounded-2xl
+                  px-3
+                  py-1.5
+                  transition-all
                 "
               >
+                <div className="flex items-center gap-1.5 text-[#19714e] shrink-0 font-bold text-xs sm:text-sm pl-0.5">
+                  <Search size={15} className="text-[#19714e]" />
+                  <span className="text-[#19714e] select-none text-xs">@</span>
+                </div>
 
-                {/* AVATAR */}
+                <input
+                  type="text"
+                  value={searchUsername}
+                  onChange={(e) => setSearchUsername(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleSearchUser();
+                    }
+                  }}
+                  placeholder="Search user by username..."
+                  className="
+                    flex-1
+                    min-w-0
+                    bg-transparent
+                    text-xs
+                    sm:text-sm
+                    text-[#123c2c]
+                    placeholder:text-[#8d9e96]
+                    focus:outline-none
+                    py-1
+                  "
+                />
 
+                {searchUsername && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchUsername("")}
+                    className="text-[#8d9e96] hover:text-[#123c2c] p-1 rounded-full transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+
+                <motion.button
+                  type="submit"
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  disabled={!searchUsername.trim()}
+                  className="
+                    px-3
+                    sm:px-3.5
+                    py-1.5
+                    rounded-xl
+                    bg-[#123c2c]
+                    hover:bg-[#19714e]
+                    disabled:opacity-30
+                    disabled:cursor-not-allowed
+                    text-white
+                    text-xs
+                    font-bold
+                    flex
+                    items-center
+                    gap-1.5
+                    transition-all
+                    shrink-0
+                    cursor-pointer
+                    shadow-2xs
+                  "
+                >
+                  <Search size={13} className="text-[#b9ef84]" />
+                  <span className="hidden xs:inline">Search</span>
+                </motion.button>
+              </form>
+
+              {/* START POST BUTTON BESIDE IT */}
+              <motion.button
+                type="button"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsCreatePostOpen(true)}
+                className="
+                  px-3.5
+                  sm:px-4
+                  py-2
+                  sm:py-2.5
+                  rounded-2xl
+                  bg-[#123c2c]
+                  hover:bg-[#19714e]
+                  text-white
+                  text-xs
+                  font-bold
+                  flex
+                  items-center
+                  justify-center
+                  gap-2
+                  transition-all
+                  cursor-pointer
+                  shadow-2xs
+                  shrink-0
+                "
+              >
                 <div
                   className="
-                    w-9
-                    h-9
-                    sm:w-10
-                    sm:h-10
-                    rounded-2xl
+                    w-6
+                    h-6
+                    rounded-xl
                     bg-gradient-to-br
-                    from-[#123c2c]
-                    to-[#19714e]
+                    from-[#19714e]
+                    to-[#123c2c]
                     text-[#b9ef84]
                     font-bold
-                    text-xs
+                    text-2xs
                     flex
                     items-center
                     justify-center
                     shrink-0
-                    shadow-xs
+                    border
+                    border-white/20
                   "
                 >
-                  {username
-                    .charAt(0)
-                    .toUpperCase()}
+                  {avatarText}
                 </div>
 
-
-                {/* INPUT LOOK */}
-
-                <div
-                  className="
-                    flex-1
-                    min-w-0
-                    py-2
-                    px-4
-                    bg-[#f7faf8]
-                    group-hover:bg-[#dff8eb]/40
-                    border
-                    border-[#dfe7e2]
-                    rounded-2xl
-                    text-xs
-                    sm:text-sm
-                    text-[#68756f]
-                    transition-colors
-                    truncate
-                  "
-                >
-                  Start a post, share photos
-                  or job referrals...
-                </div>
-
-              </div>
-
-
-              {/* ACTIONS */}
-
-              <div
-                className="
-                  flex
-                  items-center
-                  gap-2
-                  shrink-0
-                "
-              >
-
-                <button
-                  type="button"
-                  onClick={(event) => {
-
-                    event.stopPropagation();
-
-                    setIsCreatePostOpen(
-                      true
-                    );
-
-                  }}
-                  className="
-                    p-2.5
-                    rounded-2xl
-                    bg-[#f7faf8]
-                    group-hover:bg-[#dff8eb]
-                    text-[#19714e]
-                    border
-                    border-[#dfe7e2]
-                  "
-                >
-                  <ImageIcon
-                    size={16}
-                  />
-                </button>
-
-
-                <button
-                  type="button"
-                  onClick={(event) => {
-
-                    event.stopPropagation();
-
-                    setIsCreatePostOpen(
-                      true
-                    );
-
-                  }}
-                  className="
-                    px-4
-                    py-2
-                    rounded-2xl
-                    bg-[#123c2c]
-                    text-white
-                    text-xs
-                    font-bold
-                    hidden
-                    xs:inline-flex
-                    items-center
-                    gap-1.5
-                  "
-                >
-
-                  <Plus
-                    size={15}
-                    className="text-[#b9ef84]"
-                  />
-
-                  Create Post
-
-                </button>
-
-              </div>
-
+                <Plus size={15} className="text-[#b9ef84]" />
+                <span>Start Post</span>
+              </motion.button>
             </motion.div>
 
 
@@ -2094,37 +2105,48 @@ export default function HomePage() {
                               gap-2
                             "
                           >
+                            <div className="flex items-start gap-2.5 min-w-0 flex-1">
+                              {job.logo_url ? (
+                                <div className="w-8 h-8 rounded-lg bg-white border border-[#dfe7e2] shadow-2xs flex items-center justify-center shrink-0 overflow-hidden">
+                                  <img
+                                    src={job.logo_url}
+                                    alt={job.company_name || "Company"}
+                                    className="w-full h-full object-contain p-0.5"
+                                    onError={(e) => {
+                                      e.currentTarget.style.display = "none";
+                                    }}
+                                  />
+                                </div>
+                              ) : (
+                                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-[#123c2c] to-[#19714e] text-[#b9ef84] font-bold text-xs flex items-center justify-center shrink-0">
+                                  {(job.company_name || "J").charAt(0).toUpperCase()}
+                                </div>
+                              )}
 
-                            <div>
+                              <div className="min-w-0 flex-1">
+                                <h5
+                                  className="
+                                    font-bold
+                                    text-xs
+                                    text-[#12221d]
+                                    line-clamp-1
+                                  "
+                                >
+                                  {job.job_title}
+                                </h5>
 
-                              <h5
-                                className="
-                                  font-bold
-                                  text-xs
-                                  text-[#12221d]
-                                  line-clamp-1
-                                "
-                              >
-                                {
-                                  job.job_title
-                                }
-                              </h5>
-
-                              <p
-                                className="
-                                  text-[11px]
-                                  text-[#68756f]
-                                  font-semibold
-                                  truncate
-                                "
-                              >
-                                {
-                                  job.company_name
-                                }
-                              </p>
-
+                                <p
+                                  className="
+                                    text-[11px]
+                                    text-[#68756f]
+                                    font-semibold
+                                    truncate
+                                  "
+                                >
+                                  {job.company_name}
+                                </p>
+                              </div>
                             </div>
-
 
                             <span
                               className="
@@ -2140,12 +2162,8 @@ export default function HomePage() {
                                 shrink-0
                               "
                             >
-                              {
-                                job.work_mode ||
-                                "Remote"
-                              }
+                              {job.work_mode || "Remote"}
                             </span>
-
                           </div>
 
 
@@ -2164,38 +2182,54 @@ export default function HomePage() {
                           >
 
                             <span>
-
-                              ₹
-                              {job.salary_min
-                                ? (
-                                    job.salary_min /
-                                    100000
-                                  ).toFixed(
-                                    1
-                                  )
-                                : "0"}
-
-                              L - ₹
-
-                              {job.salary_max
-                                ? (
-                                    job.salary_max /
-                                    100000
-                                  ).toFixed(
-                                    1
-                                  )
-                                : "0"}
-
-                              L / yr
-
+                              {(() => {
+                                if (
+                                  job.salary_min !== null &&
+                                  job.salary_min !== undefined &&
+                                  job.salary_max !== null &&
+                                  job.salary_max !== undefined
+                                ) {
+                                  if (job.salary_min >= 100000 || job.salary_max >= 100000) {
+                                    return `₹${(job.salary_min / 100000).toFixed(1)}L - ₹${(job.salary_max / 100000).toFixed(1)}L / yr`;
+                                  }
+                                  return `₹${job.salary_min.toLocaleString()} - ₹${job.salary_max.toLocaleString()} / yr`;
+                                }
+                                if (job.salary_min !== null && job.salary_min !== undefined) {
+                                  return `From ₹${(job.salary_min / 100000).toFixed(1)}L / yr`;
+                                }
+                                if (job.salary_max !== null && job.salary_max !== undefined) {
+                                  return `Up to ₹${(job.salary_max / 100000).toFixed(1)}L / yr`;
+                                }
+                                return "Competitive";
+                              })()}
                             </span>
 
 
                             <span
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const applyUrl =
+                                  job?.apply_url ||
+                                  job?.job_url ||
+                                  job?.url ||
+                                  job?.link;
+                                if (applyUrl) {
+                                  window.open(
+                                    applyUrl,
+                                    "_blank",
+                                    "noopener,noreferrer"
+                                  );
+                                } else {
+                                  setSelectedJob(job);
+                                }
+                              }}
                               className="
                                 text-[10px]
                                 font-semibold
                                 text-[#12221d]
+                                hover:text-[#19714e]
+                                hover:underline
+                                cursor-pointer
                               "
                             >
                               Apply →

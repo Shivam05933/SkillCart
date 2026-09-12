@@ -3,7 +3,6 @@ import { motion, useMotionValue, useTransform } from "framer-motion";
 import {
   MapPin,
   Briefcase,
-  Clock,
   IndianRupee,
   Building2,
   X,
@@ -12,6 +11,7 @@ import {
   Sparkles,
   ChevronRight,
   ShieldCheck,
+  DollarSign,
 } from "lucide-react";
 
 function ensureString(value, fallback = "") {
@@ -36,6 +36,29 @@ function ensureString(value, fallback = "") {
 
   return fallback;
 }
+
+function normalizeSkills(skills) {
+  if (!skills) return [];
+  let array = [];
+  if (Array.isArray(skills)) {
+    array = skills;
+  } else if (typeof skills === "string") {
+    array = skills.split(",").map((s) => s.trim());
+  } else if (typeof skills === "object") {
+    array = Object.values(skills);
+  }
+
+  return array
+    .map((item) => {
+      if (typeof item === "string") return item.trim();
+      if (item && typeof item === "object") {
+        return (item.name || item.skill || item.title || item.label || item.value || "").trim();
+      }
+      return String(item || "").trim();
+    })
+    .filter(Boolean);
+}
+
 /**
  * Helper to generate deterministic gradient background based on company name
  */
@@ -56,7 +79,7 @@ function getCompanyGradient(name) {
  * Helper to style work mode badge with distinct color combinations
  */
 function getWorkModeBadge(mode) {
-  const safeMode = typeof mode === "string" ? mode : String(mode || "On-site");
+  const safeMode = typeof mode === "string" ? mode : String(mode || "");
   const modeLower = safeMode.toLowerCase();
   if (modeLower.includes("remote")) {
     return "bg-teal-50 text-teal-700 border-teal-200/80";
@@ -80,6 +103,7 @@ export default function SwipeCard({
   const opacityRight = useTransform(x, [20, 120], [0, 1]);
 
   const [exitDirection, setExitDirection] = useState(null);
+  const [imgError, setImgError] = useState(false);
 
   const handleDragEnd = (_, info) => {
     if (!isFront) return;
@@ -110,77 +134,142 @@ export default function SwipeCard({
   const yOffset = stackIndex * 12;
   const zIndex = 10 - stackIndex;
 
+  // ------------------------------------------------------------------
+  // DYNAMIC DATA EXTRACTION (NO HARDCODING)
+  // ------------------------------------------------------------------
   const jobTitle = ensureString(
     job?.job_title ??
     job?.title ??
-    job?.role,
-    "Software Engineer"
+    job?.role ??
+    job?.project_role,
+    "Job Opportunity"
   );
 
-  const company =
+  const companyObj =
     job?.company && typeof job.company === "object"
       ? job.company
       : {};
 
   const companyName = ensureString(
-    company.company_name ??
-    company.name ??
+    companyObj.company_name ??
+    companyObj.name ??
     job?.company_name ??
-    job?.company ??
+    (typeof job?.company === "string" ? job.company : null) ??
     job?.employer,
-    "BluepeakVentures Limited"
+    "Company"
   );
+
+  const logoUrl =
+    companyObj.logo_url ??
+    job?.logo_url ??
+    null;
 
   const location = ensureString(
     job?.location ??
-    job?.city,
-    "Coimbatore, Tamil Nadu, India"
+    job?.city ??
+    companyObj.headquarters,
+    ""
   );
 
-  const experience =
-    job?.experience_min !== undefined &&
-      job?.experience_max !== undefined
-      ? `${job.experience_min}–${job.experience_max} yrs exp`
-      : ensureString(
-        job?.experience,
-        "0–1 yrs exp"
-      );
+  // Dynamic experience calculation
+  let experience = "";
+  const expMin = job?.experience_min;
+  const expMax = job?.experience_max;
+  if (expMin !== null && expMin !== undefined && expMax !== null && expMax !== undefined) {
+    const minN = Number(expMin);
+    const maxN = Number(expMax);
+    if (minN === 0 && maxN === 0) {
+      experience = "Fresher / Entry Level";
+    } else if (minN === maxN) {
+      experience = `${minN} ${minN === 1 ? "yr" : "yrs"} exp`;
+    } else {
+      experience = `${minN}–${maxN} yrs exp`;
+    }
+  } else if (expMin !== null && expMin !== undefined) {
+    experience = `${Number(expMin)}+ yrs exp`;
+  } else if (expMax !== null && expMax !== undefined) {
+    experience = `Up to ${Number(expMax)} yrs exp`;
+  } else if (job?.experience) {
+    experience = ensureString(job.experience);
+  }
 
   const workMode = ensureString(
     job?.work_mode ??
     job?.work_type,
-    "On-site"
+    ""
   );
 
   const jobType = ensureString(
     job?.employment_type ??
     job?.job_type,
-    "Full-Time"
+    ""
   );
 
-  // Salary Formatting
-  let salaryStr = "₹4.3L - ₹8.6L / yr";
-  if (job?.salary_min || job?.salary_max) {
-    const symbol = job.currency === "USD" ? "$" : "₹";
-    if (job.currency === "INR" || !job.currency) {
-      const minL = (job.salary_min / 100000).toFixed(1);
-      const maxL = (job.salary_max / 100000).toFixed(1);
-      salaryStr = `${symbol}${minL}L - ${symbol}${maxL}L / yr`;
+  // Dynamic Salary Calculation
+  let salaryStr = "";
+  let isUsd = false;
+  const salaryMin = job?.salary_min !== null && job?.salary_min !== undefined ? Number(job.salary_min) : null;
+  const salaryMax = job?.salary_max !== null && job?.salary_max !== undefined ? Number(job.salary_max) : null;
+  const currencyCode = String(job?.currency || "INR").toUpperCase();
+
+  if ((salaryMin && salaryMin > 0) || (salaryMax && salaryMax > 0)) {
+    if (currencyCode === "INR") {
+      const minL = salaryMin ? (salaryMin / 100000).toFixed(1) : null;
+      const maxL = salaryMax ? (salaryMax / 100000).toFixed(1) : null;
+      if (minL && maxL && minL !== maxL) {
+        salaryStr = `₹${minL}L - ₹${maxL}L / yr`;
+      } else if (minL && maxL) {
+        salaryStr = `₹${minL}L / yr`;
+      } else if (minL) {
+        salaryStr = `₹${minL}L+ / yr`;
+      } else if (maxL) {
+        salaryStr = `Up to ₹${maxL}L / yr`;
+      }
     } else {
-      salaryStr = `${symbol}${job.salary_min?.toLocaleString()} - ${symbol}${job.salary_max?.toLocaleString()} / yr`;
+      isUsd = currencyCode === "USD";
+      const symbol = isUsd ? "$" : currencyCode === "EUR" ? "€" : currencyCode === "GBP" ? "£" : `${currencyCode} `;
+      if (salaryMin && salaryMax && salaryMin !== salaryMax) {
+        salaryStr = `${symbol}${salaryMin.toLocaleString()} - ${symbol}${salaryMax.toLocaleString()} / yr`;
+      } else if (salaryMin) {
+        salaryStr = `${symbol}${salaryMin.toLocaleString()} / yr`;
+      } else if (salaryMax) {
+        salaryStr = `Up to ${symbol}${salaryMax.toLocaleString()} / yr`;
+      }
     }
-  } else if (job?.salary) {
-    salaryStr = String(job.salary);
+  } else if (job?.salary && typeof job.salary === "string" && job.salary.trim() !== "") {
+    salaryStr = job.salary.trim();
   }
 
-  const matchScore = job?.match_score || job?.score || 94;
-  const avatarGradient = getCompanyGradient(companyName);
-  const workModeStyle = getWorkModeBadge(workMode);
+  // Dynamic AI Match Score calculation
+  const rawScore = job?.matchScore ?? job?.match_score ?? job?.score ?? job?.similarity ?? null;
+  let matchScorePercent = null;
+  if (rawScore !== null && rawScore !== undefined && !isNaN(Number(rawScore))) {
+    const num = Number(rawScore);
+    if (num > 0) {
+      matchScorePercent = num <= 1 ? Math.round(num * 100) : Math.round(num);
+    }
+  }
 
-  // Extract top skills
-  const skillsList = Array.isArray(job?.required_skills)
-    ? job.required_skills.slice(0, 3)
-    : ["React", "TypeScript", "SQL"];
+  const avatarGradient = getCompanyGradient(companyName);
+  const workModeStyle = workMode ? getWorkModeBadge(workMode) : "";
+
+  // Dynamic Skills (extract top 3-4, no hardcoded mock fallbacks)
+  const allSkills = [
+    ...normalizeSkills(job?.required_skills),
+    ...normalizeSkills(job?.professional_skills),
+    ...normalizeSkills(job?.preferred_skills),
+    ...normalizeSkills(job?.skills),
+  ];
+  // Deduplicate skills
+  const uniqueSkills = Array.from(new Set(allSkills));
+  const skillsList = uniqueSkills.slice(0, 3);
+
+  const department = ensureString(
+    job?.department ??
+    job?.project_role ??
+    job?.industry,
+    ""
+  );
 
   return (
     <motion.div
@@ -205,8 +294,9 @@ export default function SwipeCard({
       dragConstraints={{ left: 0, right: 0 }}
       onDragEnd={handleDragEnd}
       whileGrab={{ cursor: "grabbing" }}
-      className={`absolute inset-0 w-full h-full rounded-3xl bg-white border border-[#dfe7e2] shadow-2xl shadow-[#123c2c]/15 overflow-hidden flex flex-col justify-between select-none ${isFront ? "cursor-grab" : "pointer-events-none"
-        }`}
+      className={`absolute inset-0 w-full h-full rounded-3xl bg-white border border-[#dfe7e2] shadow-2xl shadow-[#123c2c]/15 overflow-hidden flex flex-col justify-between select-none ${
+        isFront ? "cursor-grab" : "pointer-events-none"
+      }`}
     >
       {/* ------------------------------------------------------------------ */}
       {/* DRAG SWIPE OVERLAY INDICATORS */}
@@ -250,18 +340,35 @@ export default function SwipeCard({
           <div className="flex items-center justify-between gap-2 mb-3.5">
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#dff8eb] text-[#19714e] text-xs font-extrabold border border-[#19714e]/20 shadow-2xs">
               <Sparkles size={13} className="text-[#19714e] animate-pulse" />
-              <span>{matchScore * 100}% AI Match</span>
+              <span>
+                {matchScorePercent !== null
+                  ? `${matchScorePercent}% AI Match`
+                  : "AI Recommended"}
+              </span>
             </div>
-            <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-xl border ${workModeStyle}`}>
-              {workMode}
-            </span>
+            {workMode && (
+              <span className={`text-[10px] sm:text-[11px] font-bold px-2.5 py-0.5 rounded-xl border ${workModeStyle}`}>
+                {workMode}
+              </span>
+            )}
           </div>
 
           {/* Company Logo Badge & Job Title */}
           <div className="flex items-start gap-3.5 mb-4">
-            <div className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br ${avatarGradient} font-bold text-base sm:text-lg flex items-center justify-center shrink-0 shadow-md font-['Space_Grotesk'] border border-white/20`}>
-              {companyName.charAt(0).toUpperCase()}
-            </div>
+            {logoUrl && !imgError ? (
+              <img
+                src={logoUrl}
+                alt={companyName}
+                onError={() => setImgError(true)}
+                className="w-11 h-11 sm:w-13 sm:h-13 rounded-2xl object-contain bg-[#f7faf8] border border-[#dfe7e2] p-1.5 shrink-0 shadow-xs"
+              />
+            ) : (
+              <div
+                className={`w-11 h-11 sm:w-13 sm:h-13 rounded-2xl bg-gradient-to-br ${avatarGradient} font-bold text-base sm:text-lg flex items-center justify-center shrink-0 shadow-md font-['Space_Grotesk'] border border-white/20`}
+              >
+                {companyName ? companyName.charAt(0).toUpperCase() : "J"}
+              </div>
+            )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5 text-xs font-bold text-[#68756f] truncate">
                 <Building2 size={13} className="text-[#19714e] shrink-0" />
@@ -273,23 +380,29 @@ export default function SwipeCard({
             </div>
           </div>
 
-          {/* Location & Salary Badges */}
+          {/* Location, Job Type & Salary Badges */}
           <div className="flex flex-wrap items-center gap-1.5 mb-4 text-xs font-medium">
-            <div className="flex items-center gap-1.5 text-[#52615a] bg-[#f7faf8] px-2.5 py-1 rounded-xl border border-[#dfe7e2]">
-              <MapPin size={13} className="text-[#19714e]" />
-              <span className="truncate max-w-[140px] text-[11px] font-semibold">{location}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[#52615a] bg-[#f7faf8] px-2.5 py-1 rounded-xl border border-[#dfe7e2]">
-              <Briefcase size={13} className="text-[#19714e]" />
-              <span className="text-[11px] font-semibold">{jobType}</span>
-            </div>
-            <div className="flex items-center gap-1.5 text-[#19714e] font-bold bg-[#dff8eb]/80 px-2.5 py-1 rounded-xl border border-[#19714e]/20 font-mono text-xs">
-              <IndianRupee size={13} />
-              <span>{salaryStr}</span>
-            </div>
+            {location && (
+              <div className="flex items-center gap-1.5 text-[#52615a] bg-[#f7faf8] px-2.5 py-1 rounded-xl border border-[#dfe7e2]">
+                <MapPin size={13} className="text-[#19714e]" />
+                <span className="truncate max-w-[140px] text-[11px] font-semibold">{location}</span>
+              </div>
+            )}
+            {jobType && (
+              <div className="flex items-center gap-1.5 text-[#52615a] bg-[#f7faf8] px-2.5 py-1 rounded-xl border border-[#dfe7e2]">
+                <Briefcase size={13} className="text-[#19714e]" />
+                <span className="text-[11px] font-semibold">{jobType}</span>
+              </div>
+            )}
+            {salaryStr ? (
+              <div className="flex items-center gap-1.5 text-[#19714e] font-bold bg-[#dff8eb]/80 px-2.5 py-1 rounded-xl border border-[#19714e]/20 font-mono text-xs">
+                {isUsd ? <DollarSign size={13} /> : <IndianRupee size={13} />}
+                <span>{salaryStr}</span>
+              </div>
+            ) : null}
           </div>
 
-          {/* Required Skills Badges */}
+          {/* Required Skills Badges (dynamically rendered, only when present) */}
           {skillsList.length > 0 && (
             <div className="flex flex-wrap gap-1.5 mb-4">
               {skillsList.map((skill, idx) => (
@@ -306,16 +419,20 @@ export default function SwipeCard({
 
           {/* Key Job Info */}
           <div className="space-y-2 pt-3 border-t border-[#dfe7e2]/80">
-            <div className="flex items-center justify-between text-xs text-[#68756f]">
-              <span>Experience Level:</span>
-              <span className="font-bold text-[#12221d]">{experience}</span>
-            </div>
-            <div className="flex items-center justify-between text-xs text-[#68756f]">
-              <span>Department:</span>
-              <span className="font-bold text-[#12221d] truncate max-w-[180px]">
-                {job?.department || job?.industry || "Engineering"}
-              </span>
-            </div>
+            {experience && (
+              <div className="flex items-center justify-between text-xs text-[#68756f]">
+                <span>Experience Level:</span>
+                <span className="font-bold text-[#12221d]">{experience}</span>
+              </div>
+            )}
+            {department && (
+              <div className="flex items-center justify-between text-xs text-[#68756f]">
+                <span>Department:</span>
+                <span className="font-bold text-[#12221d] truncate max-w-[180px]">
+                  {department}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -340,7 +457,7 @@ export default function SwipeCard({
             type="button"
             onClick={(e) => handleActionButton("left", e)}
             title="Reject Job (Swipe Left)"
-            className="w-12 h-12 rounded-2xl bg-white border-2 border-rose-200 text-rose-500 hover:bg-rose-50 hover:border-rose-400 transition-all flex items-center justify-center shadow-sm"
+            className="w-12 h-12 rounded-2xl bg-white border-2 border-rose-200 text-rose-500 hover:bg-rose-50 hover:border-rose-400 transition-all flex items-center justify-center shadow-sm cursor-pointer"
           >
             <X size={22} strokeWidth={2.5} />
           </motion.button>
@@ -352,7 +469,7 @@ export default function SwipeCard({
             type="button"
             onClick={() => onClickCard(job)}
             title="View Full Details"
-            className="w-10 h-10 rounded-2xl bg-white border border-[#dfe7e2] text-[#19714e] hover:bg-[#dff8eb] transition-all flex items-center justify-center shadow-2xs"
+            className="w-10 h-10 rounded-2xl bg-white border border-[#dfe7e2] text-[#19714e] hover:bg-[#dff8eb] transition-all flex items-center justify-center shadow-2xs cursor-pointer"
           >
             <Info size={18} />
           </motion.button>
@@ -364,7 +481,7 @@ export default function SwipeCard({
             type="button"
             onClick={(e) => handleActionButton("right", e)}
             title="Save Job (Swipe Right)"
-            className="w-12 h-12 rounded-2xl bg-[#123c2c] text-[#b9ef84] hover:bg-[#19714e] hover:text-white transition-all flex items-center justify-center shadow-md shadow-[#123c2c]/15"
+            className="w-12 h-12 rounded-2xl bg-[#123c2c] text-[#b9ef84] hover:bg-[#19714e] hover:text-white transition-all flex items-center justify-center shadow-md shadow-[#123c2c]/15 cursor-pointer"
           >
             <Bookmark size={20} className="fill-current" />
           </motion.button>
@@ -373,3 +490,4 @@ export default function SwipeCard({
     </motion.div>
   );
 }
+

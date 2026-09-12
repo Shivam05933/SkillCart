@@ -16,6 +16,8 @@ import {
   Calendar,
   Clock,
   AlertCircle,
+  GraduationCap,
+  Info,
 } from "lucide-react";
 
 import jobService from "../../services/jobService";
@@ -423,10 +425,27 @@ export default function JobDetailModal({
   // DATES
   // =========================================================
 
-  const postedDate = ensureString(
+  const rawPostedDate =
     activeJob.posted_date ??
-      activeJob.created_at
-  );
+    activeJob.created_at;
+
+  let postedDate = "";
+  if (rawPostedDate) {
+    try {
+      const d = new Date(rawPostedDate);
+      if (!isNaN(d.getTime())) {
+        postedDate = d.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      } else {
+        postedDate = ensureString(rawPostedDate);
+      }
+    } catch {
+      postedDate = ensureString(rawPostedDate);
+    }
+  }
 
   const deadline = ensureString(
     activeJob.application_deadline
@@ -444,7 +463,19 @@ export default function JobDetailModal({
     activeJob.experience_max !== null &&
     activeJob.experience_max !== undefined
   ) {
-    experience = `${activeJob.experience_min}–${activeJob.experience_max} yrs`;
+    const minN = Number(activeJob.experience_min);
+    const maxN = Number(activeJob.experience_max);
+    if (minN === 0 && maxN === 0) {
+      experience = "Fresher / Entry Level";
+    } else if (minN === maxN) {
+      experience = `${minN} ${minN === 1 ? "yr" : "yrs"}`;
+    } else {
+      experience = `${minN}–${maxN} yrs`;
+    }
+  } else if (activeJob.experience_min !== null && activeJob.experience_min !== undefined) {
+    experience = `${activeJob.experience_min}+ yrs`;
+  } else if (activeJob.experience_max !== null && activeJob.experience_max !== undefined) {
+    experience = `Up to ${activeJob.experience_max} yrs`;
   } else if (activeJob.experience) {
     experience = ensureString(
       activeJob.experience
@@ -499,13 +530,14 @@ export default function JobDetailModal({
   // OTHER INFORMATION
   // =========================================================
 
-  const education = ensureString(
-    activeJob.education ??
-      activeJob.education_qualification
-  );
+  const educationList =
+    normalizeList(
+      activeJob.education ??
+        activeJob.education_qualification
+    );
 
-  const additionalInformation =
-    ensureString(
+  const additionalInfoList =
+    normalizeList(
       activeJob.additional_information ??
         activeJob.selection_process ??
         activeJob.notes
@@ -515,20 +547,24 @@ export default function JobDetailModal({
   // APPLY
   // =========================================================
 
+  const applyUrl =
+    activeJob.apply_url ||
+    activeJob.job_url ||
+    activeJob.url ||
+    "";
+
   const handleApply = () => {
-    /**
-     * This is only UI behavior.
-     *
-     * Replace this later with your real
-     * application API endpoint.
-     */
-    alert(
-      `Application submitted for ${jobTitle}${
-        companyName
-          ? ` at ${companyName}`
-          : ""
-      }`
-    );
+    if (applyUrl) {
+      window.open(applyUrl, "_blank", "noopener,noreferrer");
+    } else {
+      alert(
+        `Application submitted for ${jobTitle}${
+          companyName
+            ? ` at ${companyName}`
+            : ""
+        }`
+      );
+    }
   };
 
   return (
@@ -1108,8 +1144,8 @@ export default function JobDetailModal({
 
           {(companyDescription ||
             companySize ||
-            education ||
-            additionalInformation ||
+            educationList.length > 0 ||
+            additionalInfoList.length > 0 ||
             benefits.length > 0) && (
             <div className="bg-white border border-[#dfe7e2] rounded-3xl p-5 sm:p-8 shadow-xs space-y-5">
 
@@ -1153,30 +1189,56 @@ export default function JobDetailModal({
                 </div>
               )}
 
-              {education && (
-                <div className="p-4 rounded-2xl bg-[#f7faf8] border border-[#dfe7e2]">
+              {educationList.length > 0 && (
+                <div className="space-y-2">
 
-                  <span className="font-bold text-[#12221d] block text-xs mb-1">
+                  <span className="text-[11px] font-bold text-[#68756f] uppercase tracking-wider block">
                     Education Requirements
                   </span>
 
-                  <p className="text-xs text-[#52615a] leading-relaxed">
-                    {education}
-                  </p>
+                  <div className="space-y-2">
+                    {educationList.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#f7faf8] border border-[#dfe7e2] text-xs text-[#12221d]"
+                      >
+                        <GraduationCap
+                          size={16}
+                          className="text-[#19714e] shrink-0 mt-0.5"
+                        />
+                        <span className="leading-relaxed font-medium">
+                          {item}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
 
                 </div>
               )}
 
-              {additionalInformation && (
-                <div className="p-4 rounded-2xl bg-[#f7faf8] border border-[#dfe7e2]">
+              {additionalInfoList.length > 0 && (
+                <div className="space-y-2 pt-2 border-t border-[#dfe7e2]">
 
-                  <span className="font-bold text-[#12221d] block text-xs mb-1">
+                  <span className="text-[11px] font-bold text-[#68756f] uppercase tracking-wider block">
                     Additional Information
                   </span>
 
-                  <p className="text-xs text-[#52615a] leading-relaxed">
-                    {additionalInformation}
-                  </p>
+                  <div className="space-y-2">
+                    {additionalInfoList.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="flex items-start gap-2.5 p-3 rounded-2xl bg-[#f7faf8] border border-[#dfe7e2] text-xs text-[#52615a]"
+                      >
+                        <Info
+                          size={15}
+                          className="text-[#19714e] shrink-0 mt-0.5"
+                        />
+                        <span className="leading-relaxed">
+                          {item}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
 
                 </div>
               )}

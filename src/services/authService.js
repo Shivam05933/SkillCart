@@ -25,6 +25,30 @@ const authService = {
   getMe: () =>
     api.get("/auth/me"),
 
+  // ============================================================
+  // GET USER BY USERNAME (SECURED ENDPOINT)
+  // GET https://skillcart-auth.onrender.com/api/v1/auth/users/{username}
+  // ============================================================
+  getUserByUsername: (username) => {
+    const rawToken =
+      localStorage.getItem("token") ||
+      sessionStorage.getItem("token");
+
+    const token =
+      rawToken &&
+      rawToken !== "undefined" &&
+      rawToken !== "null" &&
+      rawToken.trim() !== ""
+        ? rawToken
+        : null;
+
+    return api.get(`/api/v1/auth/users/${encodeURIComponent(username)}`, {
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+  },
+
 };
 
 export default authService;
