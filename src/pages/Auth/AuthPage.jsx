@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,9 +13,14 @@ import {
   ShieldCheck,
   Zap,
   FileText,
+  KeyRound,
+  RotateCw,
+  Send,
+  Edit3,
 } from "lucide-react";
 
 import { useAuth } from "../../context/AuthContext";
+import authService from "../../services/authService";
 import Logo from "../../components/ui/Logo";
 import Input from "../../components/ui/Input";
 
@@ -39,6 +44,31 @@ export default function AuthPage() {
   const [apiSuccess, setApiSuccess] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // OTP State for Registration
+  const [otpSent, setOtpSent] = useState(false);
+  const [isSendingOtp, setIsSendingOtp] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpDigits, setOtpDigits] = useState(["", "", "", "", "", ""]);
+  const otpInputsRef = useRef([]);
+  const [resendTimer, setResendTimer] = useState(0);
+  const [otpError, setOtpError] = useState("");
+  const [otpSuccess, setOtpSuccess] = useState("");
+  const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isOtpVerified, setIsOtpVerified] = useState(false);
+
+  // Countdown timer for re-sending OTP
+  useEffect(() => {
+    let interval = null;
+    if (resendTimer > 0) {
+      interval = setInterval(() => {
+        setResendTimer((prev) => (prev > 0 ? prev - 1 : 0));
+      }, 1000);
+    }
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [resendTimer]);
+
   // Handle form mode switch
   const handleToggleMode = (mode) => {
     if (mode === isLogin) return;
@@ -46,6 +76,13 @@ export default function AuthPage() {
     setErrors({});
     setApiError("");
     setApiSuccess("");
+    setOtpSent(false);
+    setOtp("");
+    setOtpDigits(["", "", "", "", "", ""]);
+    setResendTimer(0);
+    setOtpError("");
+    setOtpSuccess("");
+    setIsOtpVerified(false);
   };
 
   // Handle field change
@@ -58,6 +95,191 @@ export default function AuthPage() {
     }
     if (apiError) setApiError("");
     if (apiSuccess) setApiSuccess("");
+
+    // If email or password is changed after OTP verification, reset verification
+    if (!isLogin && (name === "email" || name === "password")) {
+      if (isOtpVerified) {
+        setIsOtpVerified(false);
+        setOtpSuccess("");
+      }
+      if (otpSent && name === "email") {
+        setOtpSent(false);
+        setOtp("");
+        setOtpError("");
+      }
+    }
+  };
+
+  // Send OTP handler
+  const handleSendOtp = async () => {
+    setApiError("");
+    setApiSuccess("");
+    setOtpError("");
+    setOtpSuccess("");
+
+    // Validate fields before sending OTP
+    const newErrors = {};
+    if (!formData.username.trim()) {
+      newErrors.username = "Username is required";
+    } else if (formData.username.trim().length < 2) {
+      newErrors.username = "Username must be at least 2 characters";
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = "Email address is required";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    if (!formData.password) {
+      newErrors.password = "Password is required";
+    } else if (formData.password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters";
+    }
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    setIsSendingOtp(true);
+    try {
+      const response = await authService.sendOtp({ email: formData.email.trim() });
+      const msg =
+        response?.message ||
+        response?.msg ||
+        "OTP sent successfully. Please check your email.";
+      setOtpSuccess(msg);
+      setOtpSent(true);
+      setOtp("");
+      setOtpDigits(["", "", "", "", "", ""]);
+      setResendTimer(45); // 45s resend cooldown
+      setIsOtpVerified(false);
+
+      // Focus first digit box after OTP is sent
+      setTimeout(() => {
+        otpInputsRef.current[0]?.focus();
+      }, 150);
+    } catch (err) {
+      const errMsg =
+        err?.data?.message ||
+        err?.message ||
+        "Failed to send OTP. Please check your email and try again.";
+      setOtpError(errMsg);
+    } finally {
+      setIsSendingOtp(false);
+    }
+  };
+
+  // Auto-verify OTP handler
+  const handleVerifyOtp = async (codeToVerify) => {
+    const code = (codeToVerify || otpDigits.join("")).trim();
+    if (!code || code.length !== 6) return;
+
+    setIsVerifyingOtp(true);
+    setOtpError("");
+
+    try {
+      const response = await authService.verifyOtp({
+        email: formData.email.trim(),
+        otp: code,
+      });
+
+      // Backend returns boolean true or object with success/status true
+      const isSuccess =
+        response === true ||
+        response?.success === true ||
+        response?.success === "true" ||
+        response?.status === true ||
+        response?.status === "true" ||
+        response?.verified === true;
+
+      if (isSuccess) {
+        setIsOtpVerified(true);
+        setOtpError("");
+        setOtpSuccess("OTP verified successfully! You can now create your account.");
+      } else {
+        setIsOtpVerified(false);
+        const errMsg =
+          response?.message ||
+          response?.msg ||
+          "Incorrect or invalid OTP. Please try again.";
+        setOtpError(errMsg);
+      }
+    } catch (err) {
+      setIsOtpVerified(false);
+      const errMsg =
+        err?.data?.message ||
+        err?.message ||
+        "Incorrect or invalid OTP. Please try again.";
+      setOtpError(errMsg);
+    } finally {
+      setIsVerifyingOtp(false);
+    }
+  };
+
+  // Individual digit change handler
+  const handleDigitChange = (index, value) => {
+    const cleaned = value.replace(/\D/g, "");
+    if (!cleaned) {
+      const newDigits = [...otpDigits];
+      newDigits[index] = "";
+      setOtpDigits(newDigits);
+      setOtp(newDigits.join(""));
+      setOtpError("");
+      return;
+    }
+
+    // Single digit input
+    const char = cleaned.slice(-1);
+    const newDigits = [...otpDigits];
+    newDigits[index] = char;
+    setOtpDigits(newDigits);
+    const fullCode = newDigits.join("");
+    setOtp(fullCode);
+    setOtpError("");
+
+    // Auto-advance to next box
+    if (index < 5) {
+      otpInputsRef.current[index + 1]?.focus();
+    }
+
+    // Auto verify if all 6 digits entered
+    if (fullCode.length === 6 && !newDigits.includes("")) {
+      handleVerifyOtp(fullCode);
+    }
+  };
+
+  // Backspace navigation handler
+  const handleDigitKeyDown = (index, e) => {
+    if (e.key === "Backspace") {
+      if (!otpDigits[index] && index > 0) {
+        otpInputsRef.current[index - 1]?.focus();
+      }
+    }
+  };
+
+  // Paste full OTP handler
+  const handleDigitPaste = (e) => {
+    e.preventDefault();
+    const pastedData = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+    if (!pastedData) return;
+
+    const newDigits = ["", "", "", "", "", ""];
+    for (let i = 0; i < pastedData.length; i++) {
+      newDigits[i] = pastedData[i];
+    }
+    setOtpDigits(newDigits);
+    const fullCode = newDigits.join("");
+    setOtp(fullCode);
+    setOtpError("");
+
+    const targetIdx = Math.min(pastedData.length, 5);
+    otpInputsRef.current[targetIdx]?.focus();
+
+    if (fullCode.length === 6) {
+      handleVerifyOtp(fullCode);
+    }
   };
 
   // Client validation
@@ -458,24 +680,225 @@ export default function AuthPage() {
                 </motion.div>
               </AnimatePresence>
 
-              {/* Submit Button */}
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full mt-2 py-3 px-5 rounded-xl bg-[#123c2c] hover:bg-[#19714e] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md shadow-[#123c2c]/10 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 size={18} className="animate-spin" />
-                    <span>{isLogin ? "Signing in..." : "Creating account..."}</span>
-                  </>
-                ) : (
-                  <>
-                    <span>{isLogin ? "Sign In" : "Create Account"}</span>
-                    <ArrowRight size={16} strokeWidth={2.2} />
-                  </>
-                )}
-              </button>
+              {/* In Register mode: Show Get OTP button, or OTP input field + Resend link */}
+              {!isLogin && (
+                <div className="space-y-3 pt-1">
+                  {/* If OTP is not sent yet, show Get OTP button */}
+                  {!otpSent && (
+                    <button
+                      type="button"
+                      onClick={handleSendOtp}
+                      disabled={isSendingOtp}
+                      className="w-full mt-2 py-3 px-5 rounded-xl bg-gradient-to-r from-[#123c2c] to-[#19714e] hover:from-[#19714e] hover:to-[#123c2c] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-300 shadow-md shadow-[#123c2c]/15 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
+                    >
+                      {isSendingOtp ? (
+                        <>
+                          <Loader2 size={18} className="animate-spin text-[#b9ef84]" />
+                          <span>Sending Verification Code...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Send size={15} className="text-[#b9ef84]" />
+                          <span>Get OTP</span>
+                          <ArrowRight size={16} strokeWidth={2.2} />
+                        </>
+                      )}
+                    </button>
+                  )}
+
+                  {/* If OTP was sent and not yet verified: Show Enhanced OTP Card */}
+                  {otpSent && !isOtpVerified && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.98, y: 6 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      transition={{ duration: 0.25 }}
+                      className="rounded-2xl border border-[#dfe7e2] bg-[#f7faf8]/80 p-4 sm:p-5 shadow-xs space-y-3.5 backdrop-blur-xs"
+                    >
+                      {/* Header with Email badge & edit */}
+                      <div className="flex items-center justify-between pb-2 border-b border-[#dfe7e2]/70">
+                        <div className="flex items-center gap-2">
+                          <div className="w-7 h-7 rounded-lg bg-[#19714e]/10 text-[#19714e] flex items-center justify-center">
+                            <KeyRound size={15} />
+                          </div>
+                          <div>
+                            <p className="text-xs font-bold text-[#12221d] tracking-tight">Enter Security Code</p>
+                            <p className="text-[11px] text-[#68756f] truncate max-w-[190px] sm:max-w-[240px]">
+                              Sent to <span className="font-semibold text-[#12221d]">{formData.email}</span>
+                            </p>
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setOtpSent(false);
+                            setOtp("");
+                            setOtpDigits(["", "", "", "", "", ""]);
+                            setOtpError("");
+                            setOtpSuccess("");
+                          }}
+                          className="text-[11px] font-medium text-[#19714e] hover:underline flex items-center gap-1 px-2 py-1 rounded-md hover:bg-white/80 transition-colors cursor-pointer"
+                          title="Change email address"
+                        >
+                          <Edit3 size={11} /> Change
+                        </button>
+                      </div>
+
+                      {/* Status feedback alerts inside the card */}
+                      <AnimatePresence mode="wait">
+                        {otpError && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="p-2.5 rounded-xl bg-red-50 border border-red-200/90 flex items-center gap-2 text-xs text-red-700"
+                          >
+                            <AlertCircle size={14} className="shrink-0 text-red-500" />
+                            <span className="font-medium">{otpError}</span>
+                          </motion.div>
+                        )}
+                        {!otpError && otpSuccess && (
+                          <motion.div
+                            initial={{ opacity: 0, y: -4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -4 }}
+                            className="p-2.5 rounded-xl bg-[#dff8eb] border border-[#19714e]/30 flex items-center gap-2 text-xs text-[#19714e]"
+                          >
+                            <CheckCircle2 size={14} className="shrink-0 text-[#19714e]" />
+                            <span className="font-medium">{otpSuccess}</span>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* 6 Digit Input Boxes */}
+                      <div className="flex items-center justify-between gap-1.5 sm:gap-2 pt-1" onPaste={handleDigitPaste}>
+                        {otpDigits.map((digit, index) => (
+                          <input
+                            key={index}
+                            ref={(el) => (otpInputsRef.current[index] = el)}
+                            type="text"
+                            inputMode="numeric"
+                            autoComplete="one-time-code"
+                            pattern="\d{1}"
+                            maxLength={1}
+                            value={digit}
+                            onChange={(e) => handleDigitChange(index, e.target.value)}
+                            onKeyDown={(e) => handleDigitKeyDown(index, e)}
+                            disabled={isVerifyingOtp}
+                            aria-label={`OTP Digit ${index + 1}`}
+                            className={`w-11 sm:w-12 h-12 sm:h-13 text-center text-lg sm:text-xl font-bold rounded-xl transition-all duration-200 outline-none shadow-xs ${
+                              digit
+                                ? "border-[#19714e] bg-white text-[#123c2c] ring-2 ring-[#19714e]/20"
+                                : otpError
+                                ? "border-red-400 bg-white text-red-700 focus:ring-2 focus:ring-red-400/20"
+                                : "border-[#dfe7e2] bg-white text-[#12221d] hover:border-[#19714e]/50 focus:border-[#19714e] focus:ring-2 focus:ring-[#19714e]/20"
+                            }`}
+                          />
+                        ))}
+                      </div>
+
+                      {/* Verify Button & Spinner */}
+                      <button
+                        type="button"
+                        onClick={() => handleVerifyOtp(otpDigits.join(""))}
+                        disabled={isVerifyingOtp || otpDigits.join("").length !== 6}
+                        className="w-full py-2.5 px-4 rounded-xl bg-[#123c2c] hover:bg-[#19714e] text-white text-xs font-semibold flex items-center justify-center gap-2 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-xs cursor-pointer"
+                      >
+                        {isVerifyingOtp ? (
+                          <>
+                            <Loader2 size={15} className="animate-spin text-[#b9ef84]" />
+                            <span>Verifying Code...</span>
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 size={15} className="text-[#b9ef84]" />
+                            <span>Verify Code</span>
+                          </>
+                        )}
+                      </button>
+
+                      {/* Resend Link with Countdown Timer */}
+                      <div className="flex items-center justify-between text-xs pt-1 px-1">
+                        <span className="text-[#68756f]">Didn't get code?</span>
+                        {resendTimer > 0 ? (
+                          <span className="text-[11px] text-[#68756f] font-medium bg-white px-2.5 py-1 rounded-full border border-[#dfe7e2]">
+                            Resend in <span className="font-bold text-[#123c2c]">{resendTimer}s</span>
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={handleSendOtp}
+                            disabled={isSendingOtp}
+                            className="font-semibold text-[#19714e] hover:text-[#123c2c] hover:underline flex items-center gap-1.5 disabled:opacity-50 cursor-pointer text-xs"
+                          >
+                            {isSendingOtp ? (
+                              <>
+                                <Loader2 size={13} className="animate-spin" />
+                                <span>Sending...</span>
+                              </>
+                            ) : (
+                              <>
+                                <RotateCw size={12} />
+                                <span>Re-send OTP</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+
+                  {/* Once OTP is verified: Success Card */}
+                  {otpSent && isOtpVerified && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="p-3.5 rounded-2xl bg-gradient-to-r from-[#dff8eb] to-[#eafff4] border border-[#19714e]/30 flex items-center justify-between shadow-xs"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-[#19714e] text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <CheckCircle2 size={18} />
+                        </div>
+                        <div>
+                          <p className="text-xs font-bold text-[#123c2c]">Email Verified</p>
+                          <p className="text-[11px] text-[#19714e]">{formData.email}</p>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={isSendingOtp}
+                        className="text-[11px] font-semibold text-[#19714e] hover:text-[#123c2c] hover:underline flex items-center gap-1 disabled:opacity-50 cursor-pointer"
+                        title="Resend code if needed"
+                      >
+                        <RotateCw size={11} /> Re-send
+                      </button>
+                    </motion.div>
+                  )}
+                </div>
+              )}
+
+              {/* Submit Button: Always shown in Login mode; in Register mode, only shown when OTP response is verified (true) */}
+              {(isLogin || isOtpVerified) && (
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full mt-2 py-3 px-5 rounded-xl bg-[#123c2c] hover:bg-[#19714e] text-white text-sm font-semibold flex items-center justify-center gap-2 transition-all duration-200 shadow-md shadow-[#123c2c]/10 hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none cursor-pointer"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" />
+                      <span>{isLogin ? "Signing in..." : "Creating account..."}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{isLogin ? "Sign In" : "Create Account"}</span>
+                      <ArrowRight size={16} strokeWidth={2.2} />
+                    </>
+                  )}
+                </button>
+              )}
             </form>
 
             {/* Bottom Mobile Toggle */}
